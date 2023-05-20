@@ -1,0 +1,265 @@
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+/* NORMALIZE */
+
+
+/* BODY */
+body{
+
+	min-height: 100vh;
+	background-color: rgb(130, 130, 255);
+}
+
+main{
+	display: flex;
+	width: 100%;
+	gap: 10px;
+    padding: 10px;
+	max-width: 80em;
+	margin-top: 40px;
+}
+
+section{
+	background-color: white;
+	border-radius: 7px;
+}
+
+/* HEADER */
+.header{
+	width: 100%;
+	height: 80px;
+    background-color: rgb(83, 83, 247);
+    border: 1px solid transparent;
+	box-shadow: 5px 10px 10px rgb(64, 64, 244);
+	margin-bottom: 50px;
+}
+
+.header h1{
+    color: white;
+	font-size: 27px;
+    font-family: cursive;
+	font-weight: bold;
+	text-align: left;
+	line-height: 50px;
+	user-select: none;
+	padding-top: 10px;
+	padding-left: 50px;
+}
+
+/* CINTA DE OPCIONES */ 
+/*General  */ 
+
+.tools-board{
+	width: 210px;
+	padding: 15px 22px;
+	background-color: #f8f7f7;
+}
+
+.tools-board .row{
+	margin-bottom: 20px;
+	padding-left: 10px;
+	padding-top: 5px;
+}
+
+.row .options{
+	margin: 10px 0 0 5px;
+}
+.row .options .option{
+	display: flex;
+	align-items: center;
+	margin-bottom: 10px;
+}
+.option label, span{
+	user-select: none;
+}
+
+.option:is(:hover, .active) img{
+	filter: invert(17%) sepia(90%) saturate(3000%) hue-rotate(900deg) brightness(100%) contrast(100%);
+}
+
+.option :where(span, label){
+	color: #5a6158;
+	padding-left: 10px;
+}
+
+.option:is(:hover, .active) :where(span, label){
+	color: #4A98F7;
+}
+/*OPTIONS   */ 
+
+.option #fill-color{
+	width: 14px;
+	height: 14px;
+}
+#fill-color:checked ~ label{
+	color: #4A98F7;
+}
+
+.option #size-slider {
+	appearance: none;
+	width: 90%;
+	height: 5px;
+	border-radius: 5px;
+	background: rgba(255, 255, 255, 0.6);
+	background-image: linear-gradient(#2f71ff, #2f71ff);
+	background-size: 70% 100%;
+	margin-top: 10px;	
+}
+.option #size-slider::-webkit-slider-thumb {
+	appearance: none;
+	width: 16px;
+	height: 15px;
+	outline: none;
+	border-radius: 50%;
+	cursor: pointer;
+	background: #0d59fd;
+	box-shadow: 0 0 4px #474747;
+	transition: background .3s ease-in-out;
+}
+
+.option #size-slider::-webkit-slider-thumb:hover {
+	background: #0a54b6;
+	transition: background .3s ease-in-out;
+}
+.option #size-slider::-webkit-slider-runnable-track::-webkit-slider-thumb:active {
+    background: #023f90; 
+}
+
+/*COLORES   */ 
+.colors .options{
+	display: flex;
+	justify-content: space-around;
+}
+
+.colors .option{
+	width: 20px;
+	height: 20px;
+	position: relative;
+	border-radius: 50%;
+	margin-top: 3px;
+}
+.colors .option:nth-child(1){
+	background-color: #ffffff;
+	border: 1px solid #9e9e9e;
+}
+
+.colors .option:nth-child(2){
+	background-color: black;
+}
+
+.colors .option:nth-child(3){
+	background-color: #4A98f7;
+}
+
+.colors .option.selected::before{
+	width: 12px;
+	height: 12px;
+	top: 50%;
+	left: 50%;
+	position: absolute;
+	content: "";
+	background: inherit;
+	border-radius:inherit;
+	border: solid 2px #ffffff;
+	transform: translate(-50%, -50%);
+}
+
+.colors .option.selected:first-child::before{
+	border-color: rgb(207, 205, 205);
+}
+
+.colors #color-picker{
+	opacity: 0;
+	cursor: pointer;
+}
+
+/*BOTONES   */ 
+
+.buttons button{
+	width: 100%;
+	border: none;
+	outline: none;
+	background: none;
+	border-radius: 5px;
+	cursor: pointer;
+	font-size: 0.9rem;
+	margin-bottom: 1em;
+	margin-left: 1em;
+	padding: 11px 0;
+}
+
+.buttons .clear-canvas{
+	width: 80%;
+	border: 1px solid #6c7570;
+	color: #6c7570;
+	transition: all 0.3s ease;
+}
+.buttons .clear-canvas:hover{
+	color: #fff;
+	background-color: #6c7570;
+}
+
+.buttons .save-as-image{
+	width: 80%;
+	color: #fff;
+	background-color: #4a98df;
+	
+}
+
+/* LIENZO DE PINTAR */
+.drawing-board{
+	flex: 1;
+	background-color: white;
+}
+
+.drawing-board canvas{
+	width: 100%;
+	height: 100%;
+}
