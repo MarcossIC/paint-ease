@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Paint</title>
+    <link rel="stylesheet" href="./paint/styles/style.css">
+    <script  src="./paint/scripts/optionsToolsDomain.js" defer></script>
+    <script  src="./paint/scripts/canvasDomain.js" defer></script>
+    <script  src="./paint/scripts/pencilDomain.js" defer></script>
+    <script  src="./paint/scripts/drawService.js" defer></script>
+    <script src="./paint/scripts/canvasService.js" defer></script>
+    <script  src="./paint/scripts/drawController.js" defer></script>
+</head>
+<body>
+    <header>
+        <div class="header">
+            <h1>PaintEase</h1>
+        </div>
+    </header>
+
+    <main>
+        <section class="tools-board">
+            <div class="row">
+                <label class="title">Shapes</label>
+                <ul class="options">
+                    <li class="option tool" id="circle">
+                        <img src="./paint/imgs/circle.svg" alt="">
+                        <span>Circle</span>
+                    </li>
+                    <li class="option tool" id="rectangle">
+                        <img src="./paint/imgs/rectangle.svg" alt="">
+                        <span>Rectangle</span>
+                    </li>
+                    <li class="option tool" id="triangle">
+                        <img src="./paint/imgs/triangle.svg" alt="">
+                        <span>Triangle</span>
+                    </li>
+                    <li class="option">
+                        <input type="checkbox" id="fill-color">
+                        <label for="fill-color">Fill color</label>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="row">
+                <label class="title">Options</label>
+                <ul class="options">
+                    <li class="option active tool" id="brush">
+                        <img src="./paint/imgs/brush.svg" alt="">
+                        <span>Brush</span>
+                    </li>
+                    <li class="option tool" id="eraser">
+                        <img src="./paint/imgs/eraser.svg" alt="">
+                        <span>Eraser</span>
+                    </li>
+
+                    <li class="option">
+                        <input type="range" id="size-slider" value="4" step="1" min="2" max="30">
+                    </li>
+                </ul>
+            </div>
+
+            <div class="row colors">
+                <label class="title">Colors</label>
+                <ul class="options">
+                    <li class="option"></li>
+                    <li class="option selected"></li>
+                    <li class="option">
+                        <input type="color" id="color-picker" value="#4A98f7">
+                    </li>
+                </ul>
+            </div>
+
+            <div class="row buttons">
+                <button class="clear-canvas" id="clear">Clear Canvas</button>
+                <button class="save-as-image" id="save">Save as image</button>
+            </div>
+        </section>
+
+        <section class="drawing-board">
+            <canvas id="canvas"></canvas>
+        </section>
+    </main>
+    
+</body>
+</html>
