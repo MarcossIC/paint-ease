@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Basic Paint</title>
+    <link rel="stylesheet" href="./styles/normalize.css">
     <link rel="stylesheet" href="./styles/style.css">
     <script  src="./scripts/brushConfigurator.js" defer></script>
     <script  src="./scripts/canvasDomain.js" defer></script>
@@ -19,7 +20,7 @@
         </div>
     </header>
 
-    <main>
+    <main class="container">
         <section class="tools-board">
             <div class="row">
                 <label class="title">Shapes</label>
@@ -73,13 +74,13 @@
             </div>
 
             <div class="row buttons">
-                <button class="clear-canvas" id="clear">Clear Canvas</button>
-                <button class="save-as-image" id="save">Save as image</button>
+                <button class="clear-canvas" id="clear">Clear</button>
+                <button class="save-as-image" id="save">Save</button>
             </div>
         </section>
 
         <section class="drawing-board">
-            <canvas id="canvas"></canvas>
+            <canvas id="canvas" class="canvas"></canvas>
         </section>
     </main>
     
