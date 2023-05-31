@@ -1,4 +1,9 @@
 class OptionsTools {
+    actualTool;
+    color;
+    size;
+    fillColor;
+    
     constructor(actualTool, color, size){
         this.actualTool = actualTool;
         this.color = color;
