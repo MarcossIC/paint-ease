@@ -26,11 +26,14 @@ class Canvas {
 
       this.setSnapshot();
     }
+    /* Captura el objeto image data del lienzo */
     setSnapshot(){
+      //Captura datos de la imagen del lienzo (es decir, cantidad de pixeles, tamaño, colores, etc)
       this.snapshot = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
     }
+    /* Agrega al contexto el image data generado por el lienzo */
     putImageData(){
-      this.context.putImageData(this.snapshot, 0, 0);
+      this.context.putImageData(this.snapshot, 0, 0);//
     }
 
     /* Pinta en el lienzo*/

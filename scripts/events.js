@@ -1,5 +1,5 @@
 /* 
-Maneja el cambio de seleccion del tool 
+Maneja el cambio de seleccion de las herramientas
 */
 const changeActiveTool = (tool)=>
     tool.onclick = ()=>{
@@ -10,40 +10,38 @@ const changeActiveTool = (tool)=>
 tools.forEach(changeActiveTool);
 
 /* 
-Define el color del pincel en base a las opciones 
+    Define la opcion de color que esta seleccionada
 */
 const changeSelectedOption = (option)=>{
     option.onclick = ()=>{
-        console.log("Entre al onclick");
-        document.querySelector(".options .selected").classList.remove("selected");
-        option.classList.add("selected");
-        configurator.color = window.getComputedStyle(option).getPropertyValue("background-color");
+        document.querySelector(".options .selected").classList.remove("selected");//Quita la clase selected de la opcion que tiene
+        option.classList.add("selected");//Se selecciona el nuevo elemento
+        configurator.color = window.getComputedStyle(option).getPropertyValue("background-color");//Pone el color, igual al bg del elemento
     };
 };
-    
+//color options es un array de todos los elementos con la clase "option"
 colorOptions.forEach(changeSelectedOption);
 
 /* 
-Cambia el background del input color, para que se pueda definir el color del pincel 
+    Maneja el cambio de color por el input color
 */
-const changeColor = ()=>{
+const eventChangeColor = ()=>{
     colorPicker.parentElement.style.background = colorPicker.value;
     configurator.color = colorPicker.value;
 };
-colorPicker.oninput = changeColor;
+colorPicker.oninput = eventChangeColor;
 
 /* 
-Cambia el tamaño del pincel si se modifica el valor del controlador 
+ Maneja el evento de cambiar el tamaño del pincel
 */
-const cahngeSize = ()=>{
+const eventChangeSize = ()=>{
     configurator.size = sizeControl.value;
 };
-sizeControl.onchange = cahngeSize;
+sizeControl.onchange = eventChangeSize;
 
 /*
-    Vinculo el estado del checkBox a la clase
+    Maneja el cambio de estado de relleno
 */
-
 const changeCheckBox = (event)=>{
     configurator.paddingOn = event.target.checked;
 };
@@ -53,21 +51,20 @@ paddingOn.addEventListener("change", changeCheckBox);
 /* 
 Maneja el inicio del evento de dibujar 
 */
-
 const startDrawEvent = (event)=>{
-    pencil.preparingTheBrush({axisX: event.offsetX, axisY: event.offsetY});
-    canvas.canvas.addEventListener("mousemove", pencil.paint);
+    pencil.preparingTheBrush({axisX: event.offsetX, axisY: event.offsetY});//Aplica las configuraciones actuales
+    canvas.canvas.addEventListener("mousemove", pencil.paint);//Se dibuja al mover el mouse
 }
 canvas.canvas.onmousedown= startDrawEvent;
 
 /*
  Maneja el evento de terminar de dibujar
 */
-const stopDrawEvent = (event)=>{
-    canvas.canvas.removeEventListener("mousemove", pencil.paint);
+const stopDrawEvent = ()=>{
+    canvas.canvas.removeEventListener("mousemove", pencil.paint);//Se remueve el evento de mover el mouse
 }
-canvas.canvas.onmouseup = stopDrawEvent;
-canvas.canvas.onmouseleave = stopDrawEvent;
+canvas.canvas.onmouseup = stopDrawEvent;//Se para al levantar al soltar el click
+canvas.canvas.onmouseleave = stopDrawEvent;//Se para al sacar el mouse del lienzo
 
 /*
     Maneja el evento de limpiar el canvas 
@@ -78,7 +75,7 @@ const clearCanvasEvent = ()=>{
 clearButton.onclick = clearCanvasEvent;
 
 /* 
-Maneja el evento de guardar el canvas como imagen
+    Maneja el evento de guardar el canvas como imagen
 */
 const saveCanvasAsImageEvent = ()=>{
     canvas.saveAsImage( document.createElement("a") );
