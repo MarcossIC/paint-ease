@@ -28,9 +28,9 @@ Cambia el background del input color, para que se pueda definir el color del pin
 */
 const changeColor = ()=>{
     colorPicker.parentElement.style.background = colorPicker.value;
-    colorPicker.parentElement.click();
+    configurator.color = colorPicker.value;
 };
-colorPicker.onchange = changeColor;
+colorPicker.oninput = changeColor;
 
 /* 
 Cambia el tamaño del pincel si se modifica el valor del controlador 
@@ -43,8 +43,6 @@ sizeControl.onchange = cahngeSize;
 /*
     Vinculo el estado del checkBox a la clase
 */
-
-
 
 const changeCheckBox = (event)=>{
     configurator.paddingOn = event.target.checked;

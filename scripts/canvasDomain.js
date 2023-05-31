@@ -54,12 +54,11 @@ class Canvas {
     
     /* Dibuja en forma de circulo */
     drawCircle(axes, configurator){
-      //Defino el radio del circulo
-      let radius = Math.sqrt( Math.pow(configurator.previousX-axes.axisX,2) + Math.pow(configurator.previousY-axes.axisY,2) );
-      this.context.arc(axes.axisX,axes.axisY, radius, 0, Math.PI*2);
-      configurator.paddingOn
-      ? this.context.fill() 
-      : this.context.stroke();
+      this.context.beginPath();
+      let radius = Math.sqrt(Math.pow(configurator.previousX - axes.axisX, 2) + Math.pow(configurator.previousY - axes.axisY, 2));
+      this.context.arc(configurator.previousX, configurator.previousY, radius, 0, Math.PI*2);
+
+      configurator.paddingOn ? this.context.fill() : this.context.stroke();
     }
     /* Dibuja en forma de triangulo */
     drawTriangle(axes, configurator) {
