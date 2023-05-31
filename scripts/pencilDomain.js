@@ -25,7 +25,7 @@ class Pencil {
       circle: ()=> this.canvas.drawCircle(axes, this.configurator),
       triangle: ()=> this.canvas.drawTriangle(axes, this.configurator),
     };
-    try{ toolMethods[actualTool](); } catch{ console.log("tool not found"); }
+    toolMethods[actualTool](); 
   }
 
   preparingTheBrush({axisX, axisY}){
