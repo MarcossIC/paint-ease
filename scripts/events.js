@@ -43,7 +43,14 @@ sizeControl.onchange = cahngeSize;
 /*
     Vinculo el estado del checkBox a la clase
 */
-configurator.paddingOn = paddingOn.cheked;
+
+
+
+const changeCheckBox = (event)=>{
+    configurator.paddingOn = event.target.checked;
+};
+paddingOn.addEventListener("change", changeCheckBox);
+
 
 /* 
 Maneja el inicio del evento de dibujar 

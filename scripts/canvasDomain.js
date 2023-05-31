@@ -23,9 +23,14 @@ class Canvas {
       this.context.lineCap = "round";
       this.context.lineJoin = "round";
       this.context.beginPath();
-  
-      let snapshot = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      this.context.putImageData(snapshot, 0, 0);
+
+      this.setSnapshot();
+    }
+    setSnapshot(){
+      this.snapshot = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    }
+    putImageData(){
+      this.context.putImageData(this.snapshot, 0, 0);
     }
 
     /* Pinta en el lienzo*/
@@ -42,21 +47,17 @@ class Canvas {
 
     /* Dibuja en forma de rectangulo */
     drawRectangle(axes, configurator) {
-      console.log(axes);
-      console.log("{x: ",configurator.previousX," y: ",configurator.previousY,"}");
-      configurator.paddingOn 
+      configurator.paddingOn
       ? this.context.fillRect(axes.axisX, axes.axisY, configurator.previousX - axes.axisX,configurator.previousY - axes.axisY)
       : this.context.strokeRect(axes.axisX, axes.axisY, configurator.previousX  - axes.axisX,configurator.previousY - axes.axisY);
     }
     
     /* Dibuja en forma de circulo */
     drawCircle(axes, configurator){
-      console.log(axes);
-      console.log("{x: ",configurator.previousX," y: ",configurator.previousY,"}");
       //Defino el radio del circulo
       let radius = Math.sqrt( Math.pow(configurator.previousX-axes.axisX,2) + Math.pow(configurator.previousY-axes.axisY,2) );
       this.context.arc(axes.axisX,axes.axisY, radius, 0, Math.PI*2);
-      configurator.paddingOn 
+      configurator.paddingOn
       ? this.context.fill() 
       : this.context.stroke();
     }
@@ -68,7 +69,7 @@ class Canvas {
       this.context.lineTo(configurator.previousX * 2 - axes.axisX, axes.axisY);
       this.context.closePath();
   
-      configurator.paddingOn 
+      configurator.paddingOn
       ? this.context.fill() 
       : this.context.stroke();
     }

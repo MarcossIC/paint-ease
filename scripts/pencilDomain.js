@@ -18,6 +18,7 @@ class Pencil {
   paint = (event)=> {
     const actualTool = configurator.actualTool;
     const axes = {axisX: event.offsetX, axisY: event.offsetY};
+    this.canvas.putImageData();
     const toolMethods = {
       brush: ()=> this.canvas.drawLine(axes),
       eraser: ()=> this.canvas.eraser(axes),
