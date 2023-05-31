@@ -1,56 +1,37 @@
 class Pencil {
-  constructor(tools) {
-    this.color = tools.getColor();
-    this.size = tools.getSize();
-    this.previusX = 0;
-    this.previusY = 0;
+  //Lienzo en el que dibujar el pincel
+  canvas;
+  //Configuraciones del pincel
+  configurator;
+  constructor(configurator, canvas) {
+    this.canvas = canvas;
+    this.configurator = configurator;
   }
 
-  brushDraw(cursorX, cursorY, context, tools) {
-    context.strokeStyle = tools.getActualTool() === "eraser" ? "#fff" : tools.getColor();
-    
-    context.lineTo(cursorX, cursorY);
-    context.stroke();
+  /* Pinta encima del lienzo 
+    Posdata:  
+       La funcion esta definida de esta forma, porque en el mundo magico de JavaScript
+          donde permite llamar a funciones como parametros, al hacer esto pierde el bind de Pencil
+          imposibilitando el uso de atributos de clase, la solucion, hacer tu funcion un atributo de clase
+          de esta forma la funcion seguira siendo funcion pero no perdera el bind de Pencil
+  */
+  paint = (event)=> {
+    const actualTool = configurator.actualTool;
+    const axes = {axisX: event.offsetX, axisY: event.offsetY};
+    const toolMethods = {
+      brush: ()=> this.canvas.drawLine(axes),
+      eraser: ()=> this.canvas.eraser(axes),
+      rectangle:() => this.canvas.drawRectangle(axes, this.configurator),
+      circle: ()=> this.canvas.drawCircle(axes, this.configurator),
+      triangle: ()=> this.canvas.drawTriangle(axes, this.configurator),
+    };
+    try{ toolMethods[actualTool](); } catch{ console.log("tool not found"); }
   }
 
-  reactangleDraw(cursorX, cursorY, context, tools) {
-    tools.getFillColor().checked ? 
-        context.fillRect(cursorX, cursorY, this.previusX - cursorX, this.previusY - cursorY)
-        :
-        context.strokeRect(cursorX, cursorY, this.previusX - cursorX, this.previusY - cursorY);
-  }
-  circleDraw(cursorX, cursorY, context, tools){
-    context.beginPath();
-    let radius = Math.sqrt(Math.pow(this.previusX - cursorX, 2) + Math.pow(this.previusY - cursorY, 2));
-    context.arc(this.previusX, this.previusY, radius, 0, Math.PI*2);
-
-    tools.getFillColor().checked ? context.fill() : context.stroke();
+  preparingTheBrush({axisX, axisY}){
+    this.configurator.previousX = axisX;
+    this.configurator.previousY = axisY;
+    this.canvas.applySettings(configurator);
   }
 
-  triangleDraw(cursorX, cursorY, context, tools) {
-    context.beginPath();
-    context.moveTo(this.previusX, this.previusY);
-    context.lineTo(cursorX, cursorY);
-    context.lineTo(this.previusX * 2 - cursorX, cursorY);
-    context.closePath();
-
-    tools.getFillColor().checked ? context.fill() : context.stroke();
-  }
-
-  startDrawing(canvas){
-    let context = canvas.getContext();
-    context.lineWidth = this.size;
-    context.strokeStyle = this.color;
-    context.fillStyle = this.color;
-    context.lineCap = "round";
-    context.lineJoin = "round";
-    context.beginPath();
-
-    canvas.setSnapshot();
-  }
-
-  setColor(color) { this.color = color; }
-  setSize(size) { this.size = size; }
-  setPreviusX(previusX) { this.previusX = previusX; }
-  setPreviusY(previusY) { this.previusY = previusY; }
 }

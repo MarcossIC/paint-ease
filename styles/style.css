@@ -142,7 +142,7 @@ section{
 	color: #4A98F7;
 }
 
-.option #size-slider {
+.option #size-control {
 	appearance: none;
 	width: 90%;
 	height: 5px;
@@ -152,7 +152,7 @@ section{
 	background-size: 70% 100%;
 	margin-top: 10px;	
 }
-.option #size-slider::-webkit-slider-thumb {
+.option #size-control::-webkit-slider-thumb {
 	appearance: none;
 	width: 16px;
 	height: 15px;
@@ -164,11 +164,11 @@ section{
 	transition: background .3s ease-in-out;
 }
 
-.option #size-slider::-webkit-slider-thumb:hover {
+.option #size-control::-webkit-slider-thumb:hover {
 	background: #0a54b6;
 	transition: background .3s ease-in-out;
 }
-.option #size-slider::-webkit-slider-runnable-track::-webkit-slider-thumb:active {
+.option #size-control::-webkit-slider-runnable-track::-webkit-slider-thumb:active {
     background: #023f90; 
 }
 

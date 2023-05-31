@@ -6,12 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Basic Paint</title>
     <link rel="stylesheet" href="./styles/style.css">
-    <script  src="./scripts/optionsToolsDomain.js" defer></script>
+    <script  src="./scripts/brushConfigurator.js" defer></script>
     <script  src="./scripts/canvasDomain.js" defer></script>
     <script  src="./scripts/pencilDomain.js" defer></script>
-    <script  src="./scripts/drawService.js" defer></script>
-    <script src="./scripts/canvasService.js" defer></script>
-    <script  src="./scripts/drawController.js" defer></script>
+    <script  src="./scripts/index.js" defer></script>
+    <script src="./scripts/events.js" defer></script>
 </head>
 <body>
     <header>
@@ -57,7 +56,7 @@
                     </li>
 
                     <li class="option">
-                        <input type="range" id="size-slider" value="4" step="1" min="2" max="30">
+                        <input type="range" id="size-control" value="4" step="1" min="2" max="30">
                     </li>
                 </ul>
             </div>

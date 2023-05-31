@@ -1,41 +1,97 @@
 class Canvas {
+    //Lienzo donde se dibuja
     canvas;
+    //El contexto es la forma en la que dibujas dentro de este lienzo
     context;
     snapshot;
     
     constructor(canvasElement) {
       this.canvas = canvasElement;
       this.context = this.canvas.getContext("2d");
-
       window.addEventListener("load", ()=>{
         this.canvas.width = this.canvas.offsetWidth;
         this.canvas.height = this.canvas.offsetHeight;
       });
-      this.snapshot = undefined;
+      this.snapshot = null;
+    }
+    
+    /* Aplica las formatos del configurator brush */
+    applySettings(configurator){
+      this.context.strokeStyle = configurator.color;
+      this.context.fillStyle = configurator.color;
+      this.context.lineWidth = configurator.size;
+      this.context.lineCap = "round";
+      this.context.lineJoin = "round";
+      this.context.beginPath();
+   
+      let snapshot = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+      this.context.putImageData(snapshot, 0, 0);
+    }
+    setSapshot(){
+      this.snapshot = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    }
+    putImage(){
+      this.context.putImageData(this.snapshot, 0, 0);
     }
 
+    /* Pinta en el lienzo*/
+    drawLine(axes){
+      this.context.lineTo(axes.axisX, axes.axisY);
+      this.context.stroke();
+    }
+    /* Borrar en el lienzo */
+    eraser(axes){
+      this.context.strokeStyle = "#fff";
+      this.context.lineTo(axes.axisX, axes.axisY);
+      this.context.stroke();
+    }
+
+    /* Dibuja en forma de rectangulo */
+    drawRectangle(axes, configurator) {
+      configurator.paddingOn 
+      ? this.context.fillRect(axes.axisX, axes.axisY, configurator.previousX - axes.axisX,configurator.previousY - axes.axisY)
+      : this.context.strokeRect(axes.axisX, axes.axisY, configurator.previousX  - axes.axisX,configurator.previousY - axes.axisY);
+    }
+    
+    /* Dibuja en forma de circulo */
+    drawCircle(axes, configurator){
+      context.beginPath();
+      //Defino el radio del circulo
+      let radius = Math.sqrt( Math.pow(configurator.previousX-axes.axisX,2) + Math.pow(configurator.previousY-axes.axisY,2) );
+      this.context.arc(axes.axisX,axes.axisY, radius, 0, Math.PI*2);
+      configurator.paddingOn 
+      ? this.context.fill() 
+      : this.context.stroke();
+    }
+    /* Dibuja en forma de triangulo */
+    drawTriangle(axes, configurator) {
+      this.context.beginPath();
+      this.context.moveTo(configurator.previousX,configurator.previousY);
+      this.context.lineTo(axes.axisX, axes.axisY);
+      this.context.lineTo(configurator.previousX * 2 - axes.axisX, axes.axisY);
+      this.context.closePath();
+  
+      configurator.paddingOn 
+      ? this.context.fill() 
+      : this.context.stroke();
+    }
+
+
+    /* Limpiar Lienzo para dejarlo en blanco */
     clear(){
       this.context.clearRect(0,0, this.canvas.width, this.canvas.height);
     }
-    
-    save(link){
+    /* Guardar el lienzo en una imagen jpg*/
+    saveAsImage(link){
       link.download = `${Date.now()}.jpg`;
       link.href = this.canvas.toDataURL();
       link.click();
     }
 
-    getContext(){ return this.context; }
-    getCanvas(){ return this.canvas; }
-
-    setSnapshot(){
-      this.snapshot = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
-    }
-
-    setPutImage(){
-      this.context.putImageData(this.snapshot, 0, 0);
-    }
+    get context(){ return this.context; }
+    get canvas(){ return this.canvas; }
     
-    getSnapshot(){
+    get snapshot(){
       return this.snapshot;
     }
 }
