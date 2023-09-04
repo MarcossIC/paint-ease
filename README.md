@@ -8,5 +8,5 @@ Being in vanilla JavaScript, it is not necessary to have npm, you can already ha
 
 ## Stack
 <p user-select="none" align="left">
-  <img src="https://skillicons.dev/icons?i=css,html,js"/>
+  <img src="https://skillicons.dev/icons?i=css,html,js,vscode"/>
 </p>
