@@ -7,4 +7,6 @@
 Being in vanilla JavaScript, it is not necessary to have npm, you can already have everything ready, to execute you can choose something simple like live server for VSC
 
 ## Stack
-https://skillicons.dev/icons?i=css,html,js
+<p user-select="none" align="left">
+  <img src="https://skillicons.dev/icons?i=css,html,js"/>
+</p>
