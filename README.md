@@ -6,7 +6,7 @@
 ## Quick Start
 Being in vanilla JavaScript, it is not necessary to have npm, you can already have everything ready, to execute you can choose something simple like live server for VSC
 
-See< site in: [Paint Ease](https://marcossic.github.io/paint-in-js-html-css/)
+See site in: [Paint Ease](https://marcossic.github.io/paint-in-js-html-css/)
 ## Stack
 <p user-select="none" align="left">
   <img src="https://skillicons.dev/icons?i=css,html,js,vscode"/>
