@@ -18,7 +18,7 @@ try {
 
   // Create commit-msg hook for Commitlint
   const commitMsgPath = path.join(huskyDir, 'commit-msg');
-  const commitMsgHook = `npx commitlint --edit || { echo 'The commit message does not meet the requirements. Look at "commitlint.config.js" file.'; exit 1; }`;
+  const commitMsgHook = `npx --no -- commitlint --edit || { echo 'The commit message does not meet the requirements. Look at "commitlint.config.js" file.'; exit 1; }`;
   fs.writeFileSync(commitMsgPath, commitMsgHook);
 
   // Create pre-commit hook
