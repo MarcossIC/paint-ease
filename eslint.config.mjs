@@ -20,6 +20,7 @@ export default [
       '**/.vscode',
       '**/dist',
       '**/node_modules',
+      '.github',
       'vite.config.mjs',
       'postcss.config.mjs',
       'tailwind.config.mjs',

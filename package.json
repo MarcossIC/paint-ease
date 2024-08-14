@@ -4,12 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "private": true,
+  "homepage": "https://marcossic.github.io/paint-ease",
   "scripts": {
     "dev": "vite",
     "lint": "eslint . --fix",
     "commitlint:last": "npx commitlint --from HEAD~1 --to HEAD --verbose || $1",
-    "format": "prettier --check --ignore-path .gitignore .",
-    "format:fix": "prettier --write --ignore-path .gitignore .",
+    "format": "prettier --check --ignore-path .prettierignore .",
+    "format:fix": "prettier --write --ignore-path .prettierignore .",
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "node setup-husky.js",
@@ -17,11 +18,11 @@
   },
   "lint-staged": {
     "**/*.{js,json}": [
-      "prettier --write --ignore-path .gitignore .",
+      "prettier --write --ignore-path .prettierignore .",
       "eslint . --fix"
     ],
     "./*.{js,json,mjs}": [
-      "prettier --write --ignore-path .gitignore .",
+      "prettier --write --ignore-path .prettierignore .",
       "eslint . --fix"
     ]
   },
