@@ -3,10 +3,10 @@ export default {
     'tailwindcss/nesting': {},
     tailwindcss: {},
     autoprefixer: {},
-    "postcss-nesting": {},
+    'postcss-nesting': {},
     cssnano: {
-      preset: "default",
+      preset: 'default',
     },
-    ...(process.env.NODE_ENV === 'production' ? { cssnano: {} } : {})
+    ...(process.env.NODE_ENV === 'production' ? { cssnano: {} } : {}),
   },
-}
+};

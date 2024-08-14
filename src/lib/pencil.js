@@ -1,55 +1,60 @@
 class Pencil {
   _isDrawing;
+
   _lastDrawTime;
+
   _drawInterval;
+
   _pointsBuffer;
+
   _frameId;
+
   _interpolationThreshold;
+
   _stepReductionFactor;
 
+  /**
+   * Create Pencil object.
+   * @constructor
+   */
   constructor() {
     this._isDrawing = false;
     this._lastDrawTime = 0;
-    this._drawInterval = 1000 / 60; //60 FPS
-    this._interpolationThreshold = 6;//Distancia minima para interpolar
-    this._stepReductionFactor = 4;//Cantidad de pasos en la interpolacion
+    this._drawInterval = 1000 / 60; // 60 FPS
+    this._interpolationThreshold = 6; // Distancia minima para interpolar
+    this._stepReductionFactor = 4; // Cantidad de pasos en la interpolacion
     this._pointsBuffer = [];
     this._frameId = null;
   }
 
-  isCorrectInterval(){
+  isCorrectInterval() {
     const now = Date.now();
     if (now - this._lastDrawTime < this._drawInterval) return false;
     this._lastDrawTime = now;
     return true;
   }
 
-  calcSteps(distance){
-    return Math.max(Math.floor(distance), 1);
-  }
-  calcDistance(dx, dy){
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-
-  buffer(point){
+  buffer(point) {
     this._pointsBuffer.push(point);
   }
 
   get stepReductionFactor() {
     return this._stepReductionFactor;
   }
+
   get interpolationThreshold() {
     return this._interpolationThreshold;
   }
+
   get isDrawing() {
     return this._isDrawing;
   }
 
   set isDrawing(value) {
-    if (typeof value === "boolean") {
+    if (typeof value === 'boolean') {
       this._isDrawing = value;
     } else {
-      console.error("isDrawing must be an boolean");
+      console.error('isDrawing must be an boolean');
     }
   }
 
@@ -59,10 +64,10 @@ class Pencil {
   }
 
   set lastDrawTime(value) {
-    if (typeof value === "number") {
+    if (typeof value === 'number') {
       this._lastDrawTime = value;
     } else {
-      console.error("lastDrawTime must be an number");
+      console.error('lastDrawTime must be an number');
     }
   }
 
@@ -72,10 +77,10 @@ class Pencil {
   }
 
   set drawInterval(value) {
-    if (typeof value === "number") {
+    if (typeof value === 'number') {
       this._drawInterval = value;
     } else {
-      console.error("drawInterval must be an number");
+      console.error('drawInterval must be an number');
     }
   }
 
@@ -88,7 +93,7 @@ class Pencil {
     if (Array.isArray(value)) {
       this._pointsBuffer = value;
     } else {
-      console.error("pointsBuffer must be an array");
+      console.error('pointsBuffer must be an array');
     }
   }
 
@@ -98,10 +103,10 @@ class Pencil {
   }
 
   set frameId(value) {
-    if (value === null || typeof value === "number") {
+    if (value === null || typeof value === 'number') {
       this._frameId = value;
     } else {
-      console.error("frameId must be an number or null");
+      console.error('frameId must be an number or null');
     }
   }
 }

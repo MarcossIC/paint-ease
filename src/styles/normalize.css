@@ -88,7 +88,10 @@ html,
 }
 @supports (font-variation-settings: normal) {
   html {
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
   }
 }
 
@@ -135,20 +138,20 @@ a {
   background: transparent;
 
   &:focus {
-      outline: thin dotted;
+    outline: thin dotted;
   }
 
-  &:is(:active,:hover){
+  &:is(:active, :hover) {
     outline: 0;
   }
 }
 
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
 }
 
-input[type="number"] {
+input[type='number'] {
   -moz-appearance: textfield;
 }
 

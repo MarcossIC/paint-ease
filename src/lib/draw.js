@@ -4,7 +4,7 @@ import {
   TOOL_ERASER_ID,
   TOOL_RECTANGLE_ID,
   TOOL_TRIANGLE_ID,
-} from "../constants";
+} from '../constants';
 
 /** @type 
   {
@@ -20,27 +20,25 @@ export const drawLine = ({ ctx, axis }) => {
 };
 
 export const eraser = ({ ctx, axis }) => {
-  ctx.strokeStyle = "#fafafa";
+  ctx.strokeStyle = '#fafafa';
   ctx.lineTo(axis.X, axis.Y);
   ctx.stroke();
 };
 
-export const drawRectangle = ({ ctx, axis,prev, isPaddingOn }) => {
-  isPaddingOn
-    ? ctx.fillRect(axis.X, axis.Y, prev.X - axis.X, prev.Y - axis.Y)
-    : ctx.strokeRect(axis.X, axis.Y, prev.X - axis.X, prev.Y - axis.Y);
+export const drawRectangle = ({ ctx, axis, prev, isPaddingOn }) => {
+  if (isPaddingOn) ctx.fillRect(axis.X, axis.Y, prev.X - axis.X, prev.Y - axis.Y);
+  else ctx.strokeRect(axis.X, axis.Y, prev.X - axis.X, prev.Y - axis.Y);
 };
 
 export const drawCircle = ({ ctx, axis, prev, isPaddingOn }) => {
   ctx.beginPath();
 
-  let radius = Math.sqrt(
-    Math.pow(prev.X - axis.X, 2) + Math.pow(prev.Y - axis.Y, 2)
-  );
+  const radius = Math.sqrt((prev.X - axis.X) ** 2 + (prev.Y - axis.Y) ** 2);
 
   ctx.arc(prev.X, prev.Y, radius, 0, Math.PI * 2);
 
-  isPaddingOn ? ctx.fill() : ctx.stroke();
+  if (isPaddingOn) ctx.fill();
+  else ctx.stroke();
 };
 
 export const drawTriangle = ({ ctx, axis, prev, isPaddingOn }) => {
@@ -50,10 +48,11 @@ export const drawTriangle = ({ ctx, axis, prev, isPaddingOn }) => {
   ctx.lineTo(prev.X * 2 - axis.X, axis.Y);
   ctx.closePath();
 
-  isPaddingOn ? ctx.fill() : ctx.stroke();
+  if (isPaddingOn) ctx.fill();
+  else ctx.stroke();
 };
 
-export default {
+export const drawMethods = {
   [TOOL_BRUSH_ID]: drawLine,
   [TOOL_RECTANGLE_ID]: drawRectangle,
   [TOOL_TRIANGLE_ID]: drawTriangle,

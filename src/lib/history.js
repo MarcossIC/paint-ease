@@ -1,15 +1,10 @@
-import { deflate, inflate } from "pako";
+import { getCompressed, getDecompressed, validateContext } from './utils';
+
 const MAX_HISTORY_INDEX = 15;
 
-const validateContext = (ctx)=>{
-  if (!ctx || !(ctx instanceof CanvasRenderingContext2D)) {
-    throw new Error('Invalid canvas rendering 2D context');
-  } else {
-    return false;
-  }
-}
-class CanvasHistory {
+export default class CanvasHistory {
   _history;
+
   _historyIndex;
 
   constructor() {
@@ -21,7 +16,7 @@ class CanvasHistory {
     return this._history.length > 0;
   }
 
-  isInLast(){
+  isInLast() {
     return this._historyIndex === this._history.length - 1;
   }
 
@@ -30,7 +25,8 @@ class CanvasHistory {
       this._history = this._history.slice(0, this._historyIndex + 1);
     }
 
-    const compressed = deflate(ctx.getImageData(0, 0, width, height).data);
+    const compressed = getCompressed(ctx.getImageData(0, 0, width, height));
+
     this._history.push({ data: compressed, w: width, h: height });
     this._historyIndex++;
 
@@ -43,50 +39,47 @@ class CanvasHistory {
   reset() {
     this._history = [];
     this._historyIndex = -1;
-  };
+  }
 
   getLast() {
     if (!this.hasEntries()) {
-      throw new Error("History no started");
+      throw new Error('History no started');
     }
     return this._history[this._history.length - 1];
   }
 
-  getDecompressed({ data, w, h }) {
-    const decompressed = inflate(data);
-    return new ImageData(new Uint8ClampedArray(decompressed), w, h);
-  };
-
-  goToLast = (ctx) => {
+  goToLast(ctx) {
     if (validateContext(ctx)) return;
-    const imgData = this.getDecompressed(this.getLast());
+    const imgData = getDecompressed(this.getLast());
     ctx.putImageData(imgData, 0, 0);
-  };
+  }
 
-  undo = (ctx) => {
+  undo(ctx) {
     if (this._historyIndex <= 0 || validateContext(ctx)) {
       return;
     }
     this.subIndex();
     const imgData = this.getDecompressed(this._history[this._historyIndex]);
     ctx.putImageData(imgData, 0, 0);
-  };
+  }
 
-  redo = (ctx) => {
-    if (this._historyIndex >= history.length - 1 || validateContext(ctx)) return;
+  redo(ctx) {
+    if (this._historyIndex >= this._history.length - 1 || validateContext(ctx))
+      return;
     this.addIndex();
     const imgData = this.getDecompressed(this._history[this._historyIndex]);
     ctx.putImageData(imgData, 0, 0);
-  };
-  subIndex(){
+  }
+
+  subIndex() {
     this._historyIndex--;
   }
-  addIndex(){
+
+  addIndex() {
     this._historyIndex++;
   }
+
   get index() {
     return this._historyIndex;
   }
 }
-
-export default CanvasHistory;

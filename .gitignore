@@ -27,3 +27,5 @@ dist-ssr
 bun.lockb
 pnpm-lock.yaml
 package-lock.json
+.husky/commit-msg
+.husky/pre-commit

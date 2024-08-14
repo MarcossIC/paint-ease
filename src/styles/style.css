@@ -122,11 +122,11 @@ body {
   &:is(:not(:disabled), :has(> input:not(:disabled))):active {
     --control-bg: var(--paintease-color-bg-active);
     --control-outline: var(--paintease-color-bg-selected);
-	z-index: 1;
+    z-index: 1;
   }
 
-  &:is(:disabled, :has(> input:disabled)){
-	--color-text: var(--paintease-color-text-200);
+  &:is(:disabled, :has(> input:disabled)) {
+    --color-text: var(--paintease-color-text-200);
     opacity: 0.65;
     cursor: default;
   }
@@ -150,7 +150,7 @@ body {
       right: 3px;
     }
     &:last-child::after {
-      content: "0";
+      content: '0';
     }
 
     & input {
@@ -161,7 +161,7 @@ body {
       appearance: auto;
     }
 
-    &:has(> input[type="radio"]:checked) {
+    &:has(> input[type='radio']:checked) {
       --control-bg: var(--paintease-color-bg-active);
       --color-text: var(--paintease-color-text-purple);
     }
