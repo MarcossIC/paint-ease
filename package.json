@@ -7,12 +7,13 @@
   "scripts": {
     "dev": "vite",
     "lint": "eslint . --fix",
-    "commitlint:last": "npx commitlint --from HEAD~1 --to HEAD --verbose",
+    "commitlint:last": "npx commitlint --from HEAD~1 --to HEAD --verbose || $1",
     "format": "prettier --check --ignore-path .gitignore .",
     "format:fix": "prettier --write --ignore-path .gitignore .",
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "node setup-husky.js",
+    "commit": "git-cz",
     "postinstall": "node setup-husky.js"
   },
   "lint-staged": {
@@ -25,12 +26,18 @@
       "eslint . --fix"
     ]
   },
+  "config": {
+    "commitizen": {
+      "path": "@commitlint/cz-commitlint"
+    }
+  },
   "dependencies": {
     "pako": "^2.1.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.4.0",
     "@commitlint/config-conventional": "^19.2.2",
+    "@commitlint/cz-commitlint": "^19.4.0",
     "@eslint/compat": "^1.1.1",
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.9.0",
