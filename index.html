@@ -1,89 +1,98 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" dir="ltr">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic Paint</title>
-    <link rel="stylesheet" href="./styles/normalize.css">
-    <link rel="stylesheet" href="./styles/style.css">
-    <script  src="./scripts/brushConfigurator.js" defer></script>
-    <script  src="./scripts/canvasDomain.js" defer></script>
-    <script  src="./scripts/pencilDomain.js" defer></script>
-    <script  src="./scripts/index.js" defer></script>
-    <script src="./scripts/events.js" defer></script>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,shrink-to-fit=no">
+  <meta name="referrer" content="origin">
+  <meta name="google" content="notranslate" />
+  <title>Paint Ease - Vanilla JavaScript Paint</title>
+  <link rel="canonical" href="https://marcossic.github.io/paint-ease" />
+  <meta property="og:site_name" content="Paint Ease - Vanilla JavaScript Paint" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://marcossic.github.io/paint-ease" />
+  <meta name="al:android:app_name" content="Paint Ease" />
+  <meta name="al:ios:app_name" content="Paint Ease - Vanilla JavaScript Paint" />
+  <meta name="twitter:title" content="Paint Ease" />
+  <meta name="twitter:site" content="@MarcosLopez" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="author" href="https://www.linkedin.com/in/marcos-lopez-dev/" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <title>Paint Ease - Vanilla JavaScript Paint</title>
 </head>
+
 <body>
-    <header>
-        <div class="header">
-            <h1>PaintEase</h1>
+  <header>
+    <h1 class="visually-hidden">Paint Ease</h1>
+  </header>
+  <div id="app" tabindex="0" class="size-full select-none flex overflow-hidden relative">
+    <div class="size-full absolute user-none z-[4]">
+      <div class="tools-layer absolute user-none z-[2] fixed-pointer-container">
+        <div
+          class="w-full grid gap-8 items-start cursor-default !pointer-events-none grid-cols-[1fr,2fr,1fr] fixed-pointer-container">
+          <h2 class="visually-hidden">Menu tools board</h2>
+          <div></div>
+          <section class="flex-center !pointer-events-none cursor-default fixed-pointer-container">
+            <div id="tool-controls" class="bg-gray-100 relative shadow-md cursor-default flex-center user-none rounded-xl p-1" tabindex="1">
+              <div class="w-full flex gap-x-2">
+                <label id="btn-click" class="control-button btn" title="Neutral - 1" tabindex="2">
+                  <input type="radio" name="tool" value="neutral tool" aria-labelledby="btn-click"
+                    aria-label="Neutral tool, stop drawing" aria-keyshortcuts="1" checked>
+                </label>
+                <label id="btn-brush" class="control-button btn" title="Brush - 2" tabindex="3">
+                  <input type="radio" name="tool" value="brush tool" aria-labelledby="btn-brush"
+                    aria-label="Brush tool, start drawing" aria-keyshortcuts="2">
+                </label>
+                <label id="btn-rectangle" class="control-button btn" title="Rectangle - 3" tabindex="4">
+                  <input type="radio" name="tool" value="draw rectangle tool" aria-labelledby="btn-rectangle"
+                    aria-label="Brush rectangle tool, start drawing rectangles" aria-keyshortcuts="3">
+                </label>
+                <label id="btn-triangle" class="control-button btn" title="Triangle - 4" tabindex="5">
+                  <input type="radio" name="tool" value="draw triangle tool" aria-labelledby="btn-triangle"
+                    aria-label="Brush triangle tool, start drawing triangles" aria-keyshortcuts="4">
+                </label>
+                <label id="btn-circle" class="control-button btn" title="Circle - 5" tabindex="6">
+                  <input type="radio" name="tool" value="draw circle tool" aria-labelledby="btn-circle"
+                    aria-label="Brush circle tool, start drawing circles" aria-keyshortcuts="5">
+                </label>
+                <label id="btn-eraser" class="control-button btn" title="Eraser - 6" tabindex="7">
+                  <input type="radio" name="tool" value="eraser tool" aria-labelledby="btn-eraser"
+                    aria-label="Eraser tool" aria-keyshortcuts="6">
+                </label>
+                <label id="btn-trash-board" class="control-button btn" title="Clean board - 0" tabindex="8">
+                  <input type="radio" name="clean-tool" value="Clean board" aria-labelledby="btn-trash-board"
+                    aria-label="Clean board tool" aria-keyshortcuts="0">
+                </label>
+              </div>
+            </div>
+          </section>
         </div>
-    </header>
-
-    <main class="container">
-        <section class="tools-board">
-            <div class="row">
-                <label class="title">Shapes</label>
-                <ul class="options">
-                    <li class="option tool" id="circle">
-                        <img src="./imgs/circle.svg" alt="">
-                        <span>Circle</span>
-                    </li>
-                    <li class="option tool" id="rectangle">
-                        <img src="./imgs/rectangle.svg" alt="">
-                        <span>Rectangle</span>
-                    </li>
-                    <li class="option tool" id="triangle">
-                        <img src="./imgs/triangle.svg" alt="">
-                        <span>Triangle</span>
-                    </li>
-                    <li class="option">
-                        <input type="checkbox" id="fill-color">
-                        <label for="fill-color">Fill color</label>
-                    </li>
-                </ul>
+      </div>
+      <footer id="tool-footer"
+        class="w-full absolute bottom-4 flex justify-end items-start cursor-default !pointer-events-none px-4 fixed-pointer-container">
+        <div class="size-full transition-transform ease-in-out duration-500 cursor-default !pointer-events-none fixed-pointer-container">
+          <section class="grid grid-flow-row grid-cols-[auto] grid-auto-rows-min fixed-pointer-container gap-8">
+            <h2 class="visually-hidden">Board actions</h2>
+            <div class="flex justify-end items-center">
+              <div></div>
+              <div id="history-controls" class="w-auto flex bg-gray-200 rounded-xl cursor-default" tabindex="9">
+                <button id="btn-undo" class="control-button btn" label="Undo" aria-label="History undo" disabled
+                  tabindex="10"></button>
+                <button id="btn-redo" class="control-button btn" label="Redo" aria-label="History redo" disabled
+                  tabindex="11"></button>
+              </div>
             </div>
-
-            <div class="row">
-                <label class="title">Options</label>
-                <ul class="options">
-                    <li class="option active tool" id="brush">
-                        <img src="./imgs/brush.svg" alt="">
-                        <span>Brush</span>
-                    </li>
-                    <li class="option tool" id="eraser">
-                        <img src="./imgs/eraser.svg" alt="">
-                        <span>Eraser</span>
-                    </li>
-
-                    <li class="option">
-                        <input type="range" id="size-control" value="4" step="1" min="2" max="30">
-                    </li>
-                </ul>
-            </div>
-
-            <div class="row colors">
-                <label class="title">Colors</label>
-                <ul class="options">
-                    <li class="option"></li>
-                    <li class="option selected"></li>
-                    <li class="option">
-                        <input type="color" id="color-picker" value="#4A98f7">
-                    </li>
-                </ul>
-            </div>
-
-            <div class="row buttons">
-                <button class="clear-canvas" id="clear">Clear</button>
-                <button class="save-as-image" id="save">Save</button>
-            </div>
-        </section>
-
-        <section class="drawing-board">
-            <canvas id="canvas" class="canvas"></canvas>
-        </section>
+          </section>
+        </div>
+      </footer>
+    </div>
+    <main class="w-full h-full">
+      <canvas id="canvas" class="canvas relative z-[2]"></canvas>
     </main>
-    
+  </div>
+  <script type="module" src="./src/main.js"></script>
 </body>
-</html>
 
+</html>
