@@ -119,11 +119,6 @@ pre {
   text-wrap: pretty;
 }
 
-b,
-strong {
-  font-weight: bold;
-}
-
 img {
   max-width: none;
   border: 0;
