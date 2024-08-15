@@ -30,15 +30,16 @@ jobs:
     steps:
       - name: Setup/ Checkout
         uses: actions/checkout@v3
+      - name: Setup/ Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
       - name: Setup/ Install Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4.0.3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: pnpm
+          cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Setup/ Install pnpm
-        run: npm install -g pnpm
 
       - name: Setup/ Install dependencies
         run: CI=true pnpm install --frozen-lockfile
