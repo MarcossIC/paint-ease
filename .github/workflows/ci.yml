@@ -81,14 +81,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
-        environment:
-          name: github-pages
-        permissions:
-          contents: 'read'
-          id-token: 'write'
-          pages: 'write'
-          actions: 'write'
-          checks: 'write'
-          deployments: 'write'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
