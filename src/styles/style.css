@@ -1,0 +1,189 @@
+:root {
+  --paintease-color-bg: #fafafa;
+  --paintease-color-bg-tool: rgb(243 244 246 / 1);
+  --paintease-color-bg-hover: rgba(83, 83, 247, 0.15);
+  --paintease-color-bg-active: rgba(89, 89, 250, 0.35);
+  --paintease-color-bg-selected: rgb(110 110 254 / 60%);
+  --paintease-color-text-purple: #19075e;
+  --paintease-color-text: #1a1a1a;
+  --paintease-color-text-200: #585858;
+  --current-cursor: default;
+
+  --paintease-rounded-sm: 6px;
+  --paintease-rounded-md: 12px;
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
+  --sar: env(safe-area-inset-right);
+  --sat: env(safe-area-inset-top);
+}
+
+/* BODY */
+body {
+  --paintease-pointers-events: all;
+  height: 100%;
+  background-color: var(--paintease-color-bg);
+  cursor: default;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.grid-auto-rows-min {
+  grid-auto-rows: min-content;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.user-none {
+  pointer-events: none;
+  user-select: none;
+}
+
+.user-none-cursor {
+  pointer-events: none;
+  user-select: none;
+  cursor: default;
+}
+.user-none-touch {
+  touch-action: none;
+  user-select: none;
+}
+
+#app {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  & .fixed-pointer-container > * {
+    pointer-events: var(--paintease-pointers-events);
+  }
+}
+
+.tools-layer {
+  left: 1rem;
+  top: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  padding-top: var(--sat, 0);
+  padding-right: var(--sar, 0);
+  padding-bottom: var(--sab, 0);
+  padding-left: var(--sal, 0);
+}
+
+#canvas {
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  touch-action: none;
+  image-rendering: pixelated;
+  position: absolute;
+  z-index: 2;
+  cursor: var(--current-cursor);
+}
+
+.control-button {
+  --control-bg: var(--paintease-color-bg-tool);
+  --control-outline: var(--paintease-color-bg-tool);
+  --color-text: var(--paintease-color-text);
+  color: var(--color-text);
+  background-color: var(--control-bg);
+  width: 100%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  transition: all ease 150ms;
+
+  &:is(:not(:disabled), :has(> input:not(:disabled))):hover {
+    --control-bg: var(--paintease-color-bg-hover);
+    --control-outline: var(--paintease-color-bg-hover);
+  }
+
+  &:is(:not(:disabled), :has(> input:not(:disabled))):active {
+    --control-bg: var(--paintease-color-bg-active);
+    --control-outline: var(--paintease-color-bg-selected);
+    z-index: 1;
+  }
+
+  &:is(:disabled, :has(> input:disabled)) {
+    --color-text: var(--paintease-color-text-200);
+    opacity: 0.65;
+    cursor: default;
+  }
+}
+
+#tool-controls {
+  & .control-button {
+    counter-increment: button-counter;
+    aspect-ratio: 1/1;
+    border-radius: var(--paintease-rounded-sm);
+    padding-block: 8px;
+    padding-inline: 9px;
+
+    &::after {
+      position: absolute;
+      content: counter(button-counter);
+      font-size: 8px;
+      text-rendering: geometricPrecision;
+      font-weight: 600;
+      bottom: 1px;
+      right: 3px;
+    }
+    &:last-child::after {
+      content: '0';
+    }
+
+    & input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      cursor: default;
+      appearance: auto;
+    }
+
+    &:has(> input[type='radio']:checked) {
+      --control-bg: var(--paintease-color-bg-active);
+      --color-text: var(--paintease-color-text-purple);
+    }
+  }
+}
+
+#history-controls {
+  & .control-button {
+    outline: 1px solid var(--control-outline);
+    padding: 0.75rem;
+
+    &:first-child {
+      border-top-left-radius: 0.75rem;
+      border-bottom-left-radius: 0.75rem;
+    }
+    &:last-child {
+      border-top-right-radius: 0.75rem;
+      border-bottom-right-radius: 0.75rem;
+    }
+
+    &:not(:disabled):active {
+      --control-bg: transparent;
+    }
+  }
+}
