@@ -27,6 +27,7 @@ export default [
       'setup-husky.js',
       'package.json',
       'public',
+      'git-push.sh',
     ],
   },
   ...fixupConfigRules(

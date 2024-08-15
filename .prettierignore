@@ -7,3 +7,4 @@ public
 bun.lockb
 pnpm-lock.yaml
 package-lock.json
+git-push.sh
