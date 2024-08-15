@@ -14,7 +14,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "node setup-husky.js",
-    "up": "git-push.sh",
+    "push": "sh push.sh",
     "postinstall": "node setup-husky.js"
   },
   "lint-staged": {
