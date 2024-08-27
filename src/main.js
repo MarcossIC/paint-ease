@@ -95,8 +95,6 @@ import ToolsHandler from './lib/toolsHandler';
       document.body.style.setProperty('--paintease-pointers-events', 'all');
       toolHandler.pencil.pointsBuffer = [];
       toolHandler.isDrawing = false;
-      cancelAnimationFrame(toolHandler.pencil.frameId);
-      toolHandler.pencil.frameId = null;
       canvas.canvas.removeEventListener('pointermove', toolHandler.useTool);
       canvas.saveState();
       if (btnUndo.disabled) btnUndo.disabled = false;

@@ -7,8 +7,6 @@ class Pencil {
 
   _pointsBuffer;
 
-  _frameId;
-
   _interpolationThreshold;
 
   _stepReductionFactor;
@@ -20,11 +18,10 @@ class Pencil {
   constructor() {
     this._isDrawing = false;
     this._lastDrawTime = 0;
-    this._drawInterval = 1000 / 60; // 60 FPS
-    this._interpolationThreshold = 6; // Distancia minima para interpolar
-    this._stepReductionFactor = 4; // Cantidad de pasos en la interpolacion
+    this._drawInterval = 1000 / 60;
+    this._interpolationThreshold = 6;
+    this._stepReductionFactor = 10;
     this._pointsBuffer = [];
-    this._frameId = null;
   }
 
   isCorrectInterval() {
@@ -94,19 +91,6 @@ class Pencil {
       this._pointsBuffer = value;
     } else {
       console.error('pointsBuffer must be an array');
-    }
-  }
-
-  // Getter y Setter para _frameId
-  get frameId() {
-    return this._frameId;
-  }
-
-  set frameId(value) {
-    if (value === null || typeof value === 'number') {
-      this._frameId = value;
-    } else {
-      console.error('frameId must be an number or null');
     }
   }
 }

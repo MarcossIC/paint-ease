@@ -1,9 +1,9 @@
-name: Paint Ease CI 
+name: Paint Ease CI
 on:
   push:
-    branches: ["*"]
+    branches: ['*']
   pull_request:
-    branches: ["main"]
+    branches: ['main']
   workflow_dispatch:
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
@@ -23,12 +23,12 @@ jobs:
     steps:
       - name: Setup/ Checkout
         uses: actions/checkout@v4
-        
+
       - name: Setup/ Install pnpm
         uses: pnpm/action-setup@v4.0.0
         with:
           version: 8
-          
+
       - name: Setup/ Install Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4.0.3
         with:
@@ -45,11 +45,11 @@ jobs:
 
       - name: Lint/ Run ESLint
         run: pnpm lint
-        
+
       - name: Build the app
         if: ${{ github.ref == 'refs/heads/main' }}
         run: pnpm run build
-        
+
       - name: Build/ Upload build
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/upload-artifact@v4.3.6
@@ -65,13 +65,13 @@ jobs:
     steps:
       - name: Setup/ Checkout
         uses: actions/checkout@v4
-        
+
       - name: Download dist
         uses: actions/download-artifact@v4.1.8
         with:
           name: dist
           path: dist
-        
+
       - name: Upload artifact
         uses: actions/configure-pages@v5.0.0
 
@@ -79,7 +79,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3.0.1
         with:
           path: dist
-          
+
       - name: Clean up dist directory
         run: rm -rf dist
 
@@ -104,5 +104,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4.0.5
-        env:  
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
