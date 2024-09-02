@@ -16,7 +16,6 @@ export const calcDistance = (dx, dy) => {
 export const average = (a, b) => (a + b) / 2;
 
 export const getDecompressed = ({ data, w, h }) => {
-  console.log({ data });
   const decompressed = inflate(data);
   return new ImageData(new Uint8ClampedArray(decompressed), w, h);
 };
@@ -24,7 +23,6 @@ export const getDecompressed = ({ data, w, h }) => {
 /** @param {ImageData} img */
 export const getCompressed = img => {
   const compressed = deflate(img.data);
-  console.log({ compressed });
   return { data: compressed, w: img.width, h: img.height };
 };
 
@@ -94,4 +92,33 @@ export const debounce = (callback, wait) => {
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
+};
+
+export const advancedDebounce = (callback, delay) => {
+  let timeoutId = null;
+  let lastArgs = null;
+
+  const debounced = (...args) => {
+    lastArgs = args;
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      lastArgs = null;
+      callback(...args);
+    }, delay);
+  };
+
+  debounced.flush = () => {
+    clearTimeout(timeoutId);
+    if (lastArgs) {
+      callback(...lastArgs);
+      lastArgs = null;
+    }
+  };
+
+  debounced.cancel = () => {
+    lastArgs = null;
+    clearTimeout(timeoutId);
+  };
+
+  return debounced;
 };

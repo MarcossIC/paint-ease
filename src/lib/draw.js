@@ -24,40 +24,69 @@ export const drawLine = ({ ctx, axis, last }) => {
   ctx.stroke();
 };
 
-export const drawSimpleLine = (ctx, points) => {
+export const drawSmoothLine = (ctx, points, tension = 0.55) => {
   if (points.length < 2) return;
-
-  const [p0, p1] = points;
-
+  ctx.save();
   ctx.beginPath();
-  ctx.moveTo(p0[0], p0[1]);
-  ctx.lineTo(p1[0], p1[1]);
+  ctx.moveTo(points[0][0], points[0][1]);
+
+  // Usar Catmull-Rom spline para interpolar puntos adicionales entre los puntos originales
+  const size = points.length;
+  for (let i = 0; i < size - 1; i++) {
+    const p0 = points[i === 0 ? i : i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2 === size ? i + 1 : i + 2];
+
+    // Interpolar los puntos con la suavidad ajustada por el parámetro `tension`
+    const cp1x = p1[0] + (p2[0] - p0[0]) * tension;
+    const cp1y = p1[1] + (p2[1] - p0[1]) * tension;
+    const cp2x = p2[0] - (p3[0] - p1[0]) * tension;
+    const cp2y = p2[1] - (p3[1] - p1[1]) * tension;
+
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]);
+  }
+
   ctx.stroke();
+  ctx.restore();
 };
-export const drawSmoothLine = (ctx, points) => {
-  const [p0, _, p2] = points;
-  if (!p2) return;
-  ctx.beginPath();
 
-  if (points.length < 3) {
-    ctx.arc(p0[0], p0[1], ctx.lineWidth / 2, 0, Math.PI * 2, true);
-    ctx.fill();
+export const drawCatmullRomSpline = (ctx, points) => {
+  if (points.length < 4) {
+    ctx.beginPath();
+    ctx.moveTo(points[0][0], points[0][1]);
+    for (let i = 1; i < points.length; i++) {
+      ctx.lineTo(points[i][0], points[i][1]);
+    }
+    ctx.stroke();
     return;
   }
-  ctx.moveTo(p0[0], p0[1]);
 
-  for (let i = 1; i < points.length - 2; i++) {
-    const c = (points[i][0] + points[i + 1][0]) / 2;
-    const d = (points[i][1] + points[i + 1][1]) / 2;
-    ctx.quadraticCurveTo(points[i][0], points[i][1], c, d);
+  ctx.beginPath();
+  ctx.moveTo(points[0][0], points[0][1]);
+
+  for (let i = 0; i < points.length - 3; i++) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const p2 = points[i + 2];
+    const p3 = points[i + 3];
+
+    for (let t = 0; t <= 1; t += 0.1) {
+      const x =
+        0.5 *
+        (2 * p1[0] +
+          (-p0[0] + p2[0]) * t +
+          (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t * t +
+          (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t * t * t);
+      const y =
+        0.5 *
+        (2 * p1[1] +
+          (-p0[1] + p2[1]) * t +
+          (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t * t +
+          (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t * t * t);
+      ctx.lineTo(x, y);
+    }
   }
-
-  ctx.quadraticCurveTo(
-    points[points.length - 2][0],
-    points[points.length - 2][1],
-    points[points.length - 1][0],
-    points[points.length - 1][1]
-  );
 
   ctx.stroke();
 };
@@ -77,16 +106,13 @@ export const drawRectangle = ({ ctx, axis, last, isPaddingOn }) => {
   else ctx.strokeRect(startX, startY, lastX - startX, lastY - startY);
 };
 
-export const drawRoundedRect = ({ ctx, axis, last, radius }) => {
-  const [X, Y] = axis;
+export const customRoundRect = ({ ctx, radius, width, height, last }) => {
   const [startX, startY] = last;
-  const width = X - startX;
-  const height = Y - startY;
   const radiusX = Math.min(Math.abs(width) / 2, radius);
   const radiusY = Math.min(Math.abs(height) / 2, radius);
   const right = startX + width;
   const bottom = startY + height;
-  ctx.beginPath();
+
   ctx.moveTo(startX + Math.sign(width) * radiusX, startY);
   ctx.lineTo(right - Math.sign(width) * radiusX, startY);
   ctx.quadraticCurveTo(right, startY, right, startY + Math.sign(height) * radiusY);
@@ -96,8 +122,28 @@ export const drawRoundedRect = ({ ctx, axis, last, radius }) => {
   ctx.quadraticCurveTo(startX, bottom, startX, bottom - Math.sign(height) * radiusY);
   ctx.lineTo(startX, startY + Math.sign(height) * radiusY);
   ctx.quadraticCurveTo(startX, startY, startX + Math.sign(width) * radiusX, startY);
-  ctx.closePath();
+};
+
+export const drawRoundedRect = ({ ctx, axis, last, radius }) => {
+  const [X, Y] = axis;
+  const [startX, startY] = last;
+  // WIDTH es la diferencia entre la posicion X inicial y X acutal
+  const width = X - startX;
+  // HEIGHT es la diferencia entre la posicion Y inicial y Y acutal
+  const height = Y - startY;
+  ctx.save();
+  ctx.beginPath();
+  if (!ctx.roundRect) {
+    // Si no hay soporte para 'roundRect' se utiliza 'customRoundRect'
+    customRoundRect({ ctx, radius, width, height, last });
+  } else {
+    const adjustedStartX = Math.abs(startX) + 0.5;
+    const adjustedStartY = Math.abs(startY) + 0.5;
+    ctx.roundRect(adjustedStartX, adjustedStartY, width, height, radius);
+  }
   ctx.stroke();
+  ctx.closePath();
+  ctx.restore();
 };
 
 export const drawCircle = ({ ctx, axis, last, isPaddingOn }) => {

@@ -124,7 +124,6 @@ import { openColorDropper } from './lib/colorDropper';
       toolHandler.preparingTheBrush(e);
     }
   };
-
   const onPointerMove = e => {
     const { isDrawing } = store.getState();
     if (isDrawing) {
