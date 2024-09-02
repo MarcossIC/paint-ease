@@ -93,3 +93,32 @@ export const debounce = (callback, wait) => {
     timeout = setTimeout(later, wait);
   };
 };
+
+export const advancedDebounce = (callback, delay) => {
+  let timeoutId = null;
+  let lastArgs = null;
+
+  const debounced = (...args) => {
+    lastArgs = args;
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      lastArgs = null;
+      callback(...args);
+    }, delay);
+  };
+
+  debounced.flush = () => {
+    clearTimeout(timeoutId);
+    if (lastArgs) {
+      callback(...lastArgs);
+      lastArgs = null;
+    }
+  };
+
+  debounced.cancel = () => {
+    lastArgs = null;
+    clearTimeout(timeoutId);
+  };
+
+  return debounced;
+};

@@ -1,4 +1,4 @@
-import { RoughGenerator } from 'roughjs/bin/generator';
+import { RoughCanvas } from 'roughjs/bin/canvas';
 import DeviceContext from '../domain/device';
 import CanvasHistory from './history';
 
@@ -21,8 +21,8 @@ export default class Canvas {
   /** @type {boolean} */
   _isHolding;
 
-  /** @type {RoughGenerator} rx */
-  _rg;
+  /** @type {RoughCanvas} rx */
+  rc;
 
   /**
    * Crea un Canvas Object. Agrupa las funciones aplicadas al canvas
@@ -31,8 +31,9 @@ export default class Canvas {
    */
   constructor(canvasHtml) {
     this._canvas = canvasHtml;
-    this._rg = new RoughGenerator();
-    this._context2D = this._canvas.getContext('2d');
+    this.rc = new RoughCanvas(canvasHtml);
+
+    this._context2D = this._canvas.getContext('2d', { willReadFrequently: true });
     this._history = new CanvasHistory();
     this._snapshot = null;
     this._deviceContext = new DeviceContext();
@@ -40,19 +41,25 @@ export default class Canvas {
   }
 
   startCanvas = () => {
-    this._canvas.width = this._canvas.offsetWidth;
-    this._canvas.height = this._canvas.offsetHeight;
+    this.setCanvasSize();
+
     this._context2D.fillStyle = '#fafafa';
     this._context2D.strokeStyle = '#fafafa';
     this._context2D.fillRect(0, 0, this._canvas.width, this._canvas.height);
-
     this.setSnapshot();
   };
 
+  setCanvasSize() {
+    this._context2D.setTransform(1, 0, 0, 1, 0, 0);
+    const dpr = window.devicePixelRatio || 1;
+    this._canvas.width = this._canvas.offsetWidth * dpr;
+    this._canvas.height = this._canvas.offsetHeight * dpr;
+    this._context2D.scale(dpr, dpr);
+  }
+
   resizeCanvas = () => {
     // Redimensionar el lienzo
-    this._canvas.width = this._canvas.offsetWidth;
-    this._canvas.height = this._canvas.offsetHeight;
+    this.setCanvasSize();
 
     // Redibujar si hay entradas en el historial
     if (this._history.hasEntries()) {
@@ -97,6 +104,7 @@ export default class Canvas {
     this._context2D.lineCap = 'round';
     this._context2D.lineJoin = 'round';
     this._context2D.globalAlpha = 1.0;
+
     this.setSnapshot();
   }
 

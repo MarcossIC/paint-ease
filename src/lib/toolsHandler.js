@@ -31,12 +31,9 @@ export default class ToolsHandler {
 
   getMousePosition(evt) {
     const { zoom } = store.getState();
-    const [left, top] = this._canvas.getCanvasOffsets();
+    const { left, top } = this._canvas.canvas.getBoundingClientRect();
 
-    return this.getFixedCoords([
-      (evt.clientX - left) / zoom,
-      (evt.clientY - top) / zoom,
-    ]);
+    return [(evt.pageX - left) / zoom, (evt.pageY - top) / zoom];
   }
 
   /* Cuando dibuja, en pointer move */
@@ -73,16 +70,27 @@ export default class ToolsHandler {
     this.setPrevAxis(axis);
     this._canvas.applySettings(this._toolSetting);
     this._toolState.ctx = this._canvas.context;
+    // Resuelve el problema de
+    this._toolState.ctx.translate(0.5, 0.5);
     this._points = [axis];
   }
 
+  /**
+   * @deprecated El problema lo soluciona 'ctx.translate(0.5, 0.5);'
+   * Sirve para evitar un bug al dibujar en cordenadas verticales u horizantales con linewidth par o impares.
+   * Linewidth es impar, es mejor que la coord termine con .5.
+   * Linewdith, es par, es mejor que sea un numero entero.
+   *
+   * @param {[number, number]} axis
+   * @returns {[number, number]}
+   */
   getFixedCoords(axis) {
     const [X, Y] = axis;
     const { size } = this._toolSetting;
     const isEven = size % 2 === 0;
-    if (isEven) return axis;
+    if (isEven) return [Math.round(X), Math.round(Y)];
 
-    return [X + 0.5, Y + 0.5];
+    return [Math.floor(X) + 0.5, Math.floor(Y) + 0.5];
   }
 
   resetToolState() {
