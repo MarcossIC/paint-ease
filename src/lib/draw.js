@@ -98,10 +98,13 @@ export const customRoundRect = ({ ctx, radius, width, height, last }) => {
 export const drawRoundedRect = ({ ctx, axis, last, radius }) => {
   const [X, Y] = axis;
   const [startX, startY] = last;
+  // WIDTH es la diferencia entre la posicion X inicial y X acutal
   const width = X - startX;
+  // HEIGHT es la diferencia entre la posicion Y inicial y Y acutal
   const height = Y - startY;
   ctx.beginPath();
   if (!ctx.roundRect) {
+    // Si no hay soporte para 'roundRect' se utiliza 'customRoundRect'
     customRoundRect({ ctx, radius, width, height, last });
   } else {
     const adjustedStartX = Math.abs(startX) + 0.5;
