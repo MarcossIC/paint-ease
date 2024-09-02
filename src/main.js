@@ -143,6 +143,12 @@ import { openColorDropper } from './lib/colorDropper';
   const onContextMenu = e => {
     e.preventDefault();
   };
+  const onTouchMove = e => {
+    // Block pinch-zooming
+    if (typeof e.scale === 'number' && e.scale !== 1) {
+      e.preventDefault();
+    }
+  };
   // --------------- STORE SUBSCRIPTIONS ---------------------
 
   store.subscribe('cursor', newValue => {
@@ -189,7 +195,10 @@ import { openColorDropper } from './lib/colorDropper';
       addEventListener(canvasHtml, EVENTS.POINTER_UP, onPointerStop),
       addEventListener(canvasHtml, EVENTS.POINTER_LEAVE, onPointerStop),
       addEventListener(canvasHtml, EVENTS.POINTER_CANCEL, onPointerStop),
-      addEventListener(canvasHtml, EVENTS.POINTER_OUT, onPointerStop)
+      addEventListener(canvasHtml, EVENTS.POINTER_OUT, onPointerStop),
+      addEventListener(document, EVENTS.TOUCH_MOVE, onTouchMove, {
+        passive: false,
+      })
     );
   };
 

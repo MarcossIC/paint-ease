@@ -45,6 +45,7 @@ export const EVENTS = {
   POINTER_OUT: 'pointerout',
   POINTER_LEAVE: 'pointerleave',
   POINTER_CANCEL: 'pointercancel',
+  TOUCH_MOVE: 'touchmove',
   STATE_CHANGE: 'statechange',
   FOCUS: 'focus',
   CONTEXT_MENU: 'contextmenu',
