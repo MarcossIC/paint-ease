@@ -156,16 +156,13 @@ import { openColorDropper } from './lib/colorDropper';
     );
   });
   store.subscribe('hasHistory', newValue => {
-    let isDisableRedo;
-    let isDisableUndo;
+    let isDisableRedo = true;
+    let isDisableUndo = true;
     const isActive = newValue.description === 'true';
     if (isActive) {
       // Use denial to disabled
       isDisableRedo = !canvas.history.hasRedo();
       isDisableUndo = !canvas.history.hasUndo();
-    } else {
-      isDisableUndo = !isActive;
-      isDisableRedo = !isActive;
     }
     btnRedo.disabled = isDisableRedo;
     btnUndo.disabled = isDisableUndo;

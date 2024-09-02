@@ -134,7 +134,7 @@ export const CURSOR_TYPE = {
   POINTER: 'pointer',
   MOVE: 'move',
   AUTO: '',
-  ERASER: `url("/icons/cursorEraser.png") 10 10, auto`,
+  ERASER: `url("./icons/cursorEraser.png") 10 10, auto`,
 };
 
 export const TOOL_CURSOR_MAP = {
