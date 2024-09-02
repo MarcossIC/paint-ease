@@ -16,7 +16,6 @@ export const calcDistance = (dx, dy) => {
 export const average = (a, b) => (a + b) / 2;
 
 export const getDecompressed = ({ data, w, h }) => {
-  console.log({ data });
   const decompressed = inflate(data);
   return new ImageData(new Uint8ClampedArray(decompressed), w, h);
 };
@@ -24,7 +23,6 @@ export const getDecompressed = ({ data, w, h }) => {
 /** @param {ImageData} img */
 export const getCompressed = img => {
   const compressed = deflate(img.data);
-  console.log({ compressed });
   return { data: compressed, w: img.width, h: img.height };
 };
 

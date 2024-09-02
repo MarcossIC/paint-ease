@@ -77,16 +77,13 @@ export const drawRectangle = ({ ctx, axis, last, isPaddingOn }) => {
   else ctx.strokeRect(startX, startY, lastX - startX, lastY - startY);
 };
 
-export const drawRoundedRect = ({ ctx, axis, last, radius }) => {
-  const [X, Y] = axis;
+export const customRoundRect = ({ ctx, radius, width, height, last }) => {
   const [startX, startY] = last;
-  const width = X - startX;
-  const height = Y - startY;
   const radiusX = Math.min(Math.abs(width) / 2, radius);
   const radiusY = Math.min(Math.abs(height) / 2, radius);
   const right = startX + width;
   const bottom = startY + height;
-  ctx.beginPath();
+
   ctx.moveTo(startX + Math.sign(width) * radiusX, startY);
   ctx.lineTo(right - Math.sign(width) * radiusX, startY);
   ctx.quadraticCurveTo(right, startY, right, startY + Math.sign(height) * radiusY);
@@ -96,8 +93,23 @@ export const drawRoundedRect = ({ ctx, axis, last, radius }) => {
   ctx.quadraticCurveTo(startX, bottom, startX, bottom - Math.sign(height) * radiusY);
   ctx.lineTo(startX, startY + Math.sign(height) * radiusY);
   ctx.quadraticCurveTo(startX, startY, startX + Math.sign(width) * radiusX, startY);
-  ctx.closePath();
+};
+
+export const drawRoundedRect = ({ ctx, axis, last, radius }) => {
+  const [X, Y] = axis;
+  const [startX, startY] = last;
+  const width = X - startX;
+  const height = Y - startY;
+  ctx.beginPath();
+  if (!ctx.roundRect) {
+    customRoundRect({ ctx, radius, width, height, last });
+  } else {
+    const adjustedStartX = Math.abs(startX) + 0.5;
+    const adjustedStartY = Math.abs(startY) + 0.5;
+    ctx.roundRect(adjustedStartX, adjustedStartY, width, height, radius);
+  }
   ctx.stroke();
+  ctx.closePath();
 };
 
 export const drawCircle = ({ ctx, axis, last, isPaddingOn }) => {

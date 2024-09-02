@@ -44,7 +44,6 @@ export default class ToolsHandler {
     e.preventDefault();
 
     const axis = this.getMousePosition(e);
-    console.log({ x: axis[0], y: axis[1] });
     this.setCurrentAxis(axis);
     const tool = this._toolSetting.currentTool;
     const isDrawLine = tool === TOOL_BRUSH_ID || tool === TOOL_ERASER_ID;
