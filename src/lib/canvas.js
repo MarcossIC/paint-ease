@@ -1,62 +1,85 @@
+import DeviceContext from '../domain/device';
 import CanvasHistory from './history';
 
 export default class Canvas {
-  // Lienzo donde se dibuja
+  /** @type {HTMLCanvasElement} - Canvas HTML donde se dibuja. */
   _canvas;
 
-  // El contexto es la forma en la que dibujas dentro de este lienzo
+  /** @type {CanvasRenderingContext2D} - Context de renderizado 2D del canvas. */
   _context2D;
 
+  /** @type {ImageData} - Snapshot del estado actual del lienzo. */
   _snapshot;
 
+  /** @type {CanvasHistory} - Manaja el historial del canvas. */
   _history;
 
+  /** @type {DeviceContext} */
+  _deviceContext;
+
+  /** @type {boolean} */
+  _isHolding;
+
+  /**
+   * Crea un Canvas Object. Agrupa las funciones aplicadas al canvas
+   *
+   * @param {HTMLCanvasElement} canvasHtml
+   */
   constructor(canvasHtml) {
     this._canvas = canvasHtml;
     this._context2D = this._canvas.getContext('2d');
     this._history = new CanvasHistory();
     this._snapshot = null;
-    window.addEventListener('load', () => {
-      this._canvas.width = this._canvas.offsetWidth;
-      this._canvas.height = this._canvas.offsetHeight;
-      this._context2D.fillStyle = '#fafafa';
-      this._context2D.strokeStyle = '#fafafa';
-      this._context2D.fillRect(0, 0, this._canvas.width, this._canvas.height);
-      this.setSnapshot();
-    });
-    window.addEventListener('resize', this.resizeCanvas.bind(this));
+    this._deviceContext = new DeviceContext();
+    this._isHolding = false;
   }
+
+  startCanvas = () => {
+    this._canvas.width = this._canvas.offsetWidth;
+    this._canvas.height = this._canvas.offsetHeight;
+    this._context2D.fillStyle = '#fafafa';
+    this._context2D.strokeStyle = '#fafafa';
+    this._context2D.fillRect(0, 0, this._canvas.width, this._canvas.height);
+    this.setSnapshot();
+  };
+
+  resizeCanvas = () => {
+    // Redimensionar el lienzo
+    this._canvas.width = this._canvas.offsetWidth;
+    this._canvas.height = this._canvas.offsetHeight;
+
+    // Redibujar si hay entradas en el historial
+    if (this._history.hasEntries()) {
+      this.redraw(this._context2D);
+    }
+    this.setSnapshot();
+  };
 
   saveState() {
     this._history.update(this._context2D, this._canvas.width, this._canvas.height);
   }
 
-  goBackHistory() {
-    if (this._history.index <= 0) {
+  canvasUndo() {
+    if (this._history.hasUndo()) {
       this.clear();
-      this._history.subIndex();
-    } else {
-      this._history.undo(this._context2D);
+      const isLast = this._history.undo(this._context2D);
+      if (isLast) this.clear();
     }
-    return this._history.index === -1;
+    return this._history.hasUndo();
+  }
+
+  canvasRedo() {
+    if (this._history.hasRedo()) {
+      this.clear();
+      this._history.redo(this._context2D);
+    }
+    return this._history.hasRedo();
   }
 
   redraw(ctx) {
     this.clear();
-    if (this._snapshot || this._history.index >= 0) {
+    if (this._history.index >= 0) {
       this._history.goToLast(ctx);
-    }
-  }
-
-  resizeCanvas() {
-    // Redimensionar el lienzo
-    this._canvas.width = this._canvas.offsetWidth;
-    this._canvas.height = this._canvas.offsetHeight;
-
-    // Redibujar el contenido ajustado al nuevo tamaño del lienzo
-    // Si no hay entradas en el historial, no se dibuja nada
-    if (this._history && this._history.hasEntries()) {
-      this.redraw(this._context2D);
     }
   }
 
@@ -67,8 +90,13 @@ export default class Canvas {
     this._context2D.lineWidth = size; // Grozor de la linea
     this._context2D.lineCap = 'round';
     this._context2D.lineJoin = 'round';
-    this._context2D.beginPath();
-    this.setSnapshot(); // Guarda
+    this._context2D.globalAlpha = 1.0;
+    this.setSnapshot();
+  }
+
+  setMoveto(axis) {
+    const [lastX, lastY] = axis;
+    this._context2D.moveTo(lastX, lastY);
   }
 
   setSnapshot() {
@@ -81,8 +109,27 @@ export default class Canvas {
     );
   }
 
-  putImageData() {
+  restoreImageData() {
     this._context2D.putImageData(this._snapshot, 0, 0); //
+  }
+
+  /**
+   * Obtiene los desplazamientos (offsets) del canvas.
+   *
+   * @returns {[number, number]} Un array con dos elementos: [offsetX, offsetY]
+   */
+  getCanvasOffsets() {
+    if (!this._canvas) return [0, 0];
+
+    const { left, top } = this._canvas.getBoundingClientRect();
+    return [left, top];
+  }
+
+  getCanvasScale() {
+    if (!this._canvas) return [0, 0];
+    const { width, height } = this._canvas.getBoundingClientRect();
+
+    return [this._canvas.width / width, this._canvas.height / height];
   }
 
   /* Limpiar Lienzo para dejarlo en blanco */
@@ -100,5 +147,9 @@ export default class Canvas {
 
   get history() {
     return this._history;
+  }
+
+  get isHolding() {
+    return this._isHolding;
   }
 }

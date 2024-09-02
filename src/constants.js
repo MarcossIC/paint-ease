@@ -30,3 +30,122 @@ export const TOOL_ICON = {
   [TOOL_UNDO_ID]: UNDO_ICON,
   [TOOL_REDO_ID]: REDO_ICON,
 };
+
+export const EVENTS = {
+  PASTE: 'paste',
+  KEYDOWN: 'keydown',
+  KEYUP: 'keyup',
+  MOUSE_MOVE: 'mousemove',
+  RESIZE: 'resize',
+  DRAG_OVER: 'dragover',
+  DRAG_START: 'dragstart',
+  POINTER_MOVE: 'pointermove',
+  POINTER_DOWN: 'pointerdown',
+  POINTER_UP: 'pointerup',
+  POINTER_OUT: 'pointerout',
+  POINTER_LEAVE: 'pointerleave',
+  POINTER_CANCEL: 'pointercancel',
+  STATE_CHANGE: 'statechange',
+  FOCUS: 'focus',
+  CONTEXT_MENU: 'contextmenu',
+  LOAD: 'load',
+  CLICK: 'click',
+};
+
+export const isDarwin = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+export const isWindows = /^Win/.test(navigator.platform);
+export const isAndroid = /\b(android)\b/i.test(navigator.userAgent);
+export const isFirefox =
+  'netscape' in window &&
+  navigator.userAgent.indexOf('rv:') > 1 &&
+  navigator.userAgent.indexOf('Gecko') > 1;
+export const isChrome =
+  navigator.userAgent.indexOf('Chrome') !== -1 &&
+  (!!window.chrome || !!window.chrome.runtime);
+export const isSafari = !isChrome && navigator.userAgent.indexOf('Safari') !== -1;
+export const isIOS =
+  /iPad|iPhone/.test(navigator.platform) ||
+  // iPadOS 13+
+  (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
+
+// keeping function so it can be mocked in test
+export const isBrave = () =>
+  navigator?.brave && navigator.brave.isBrave?.name === 'isBrave';
+
+export const supportsResizeObserver =
+  typeof window !== 'undefined' && 'ResizeObserver' in window;
+
+export const DEFAULT_TRANSFORM_HANDLE_SPACING = 2;
+export const SIDE_RESIZING_THRESHOLD = 2 * DEFAULT_TRANSFORM_HANDLE_SPACING;
+
+const EPSILON = 0.00001;
+export const DEFAULT_COLLISION_THRESHOLD = 2 * SIDE_RESIZING_THRESHOLD - EPSILON;
+
+export const IMAGE_MIME_TYPES = {
+  svg: 'image/svg+xml',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  bmp: 'image/bmp',
+  ico: 'image/x-icon',
+  avif: 'image/avif',
+  jfif: 'image/jfif',
+};
+
+export const MAX_DECIMALS_FOR_SVG_EXPORT = 2;
+
+export const EXPORT_SCALES = [1, 2, 3];
+export const DEFAULT_EXPORT_PADDING = 10;
+
+export const VERTICAL_ALIGN = {
+  TOP: 'top',
+  MIDDLE: 'middle',
+  BOTTOM: 'bottom',
+};
+
+export const TEXT_ALIGN = {
+  LEFT: 'left',
+  CENTER: 'center',
+  RIGHT: 'right',
+};
+
+export const ELEMENT_READY_TO_ERASE_OPACITY = 20;
+
+// Radius represented as 25% of element's largest side (width/height).
+// Used for LEGACY and PROPORTIONAL_RADIUS algorithms, or when the element is
+// below the cutoff size.
+export const DEFAULT_PROPORTIONAL_RADIUS = 0.25;
+// Fixed radius for the ADAPTIVE_RADIUS algorithm. In pixels.
+export const DEFAULT_ADAPTIVE_RADIUS = 32;
+
+export const ROUGHNESS = {
+  architect: 0,
+  artist: 1,
+  cartoonist: 2,
+};
+
+export const CURSOR_TYPE = {
+  DEFAULT: 'default',
+  TEXT: 'text',
+  CROSSHAIR: 'crosshair',
+  GRABBING: 'grabbing',
+  GRAB: 'grab',
+  POINTER: 'pointer',
+  MOVE: 'move',
+  AUTO: '',
+  ERASER: `url("/icons/cursorEraser.png") 10 10, auto`,
+};
+
+export const TOOL_CURSOR_MAP = {
+  [TOOL_CLICK_ID]: CURSOR_TYPE.DEFAULT,
+  [TOOL_ERASER_ID]: CURSOR_TYPE.ERASER,
+  [TOOL_TRASH_ID]: null,
+  default: CURSOR_TYPE.CROSSHAIR,
+};
+
+export const SPECIAL_OBJ_PROPERTIES = new Set([
+  '__proto__',
+  'constructor',
+  'prototype',
+]);

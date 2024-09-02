@@ -28,7 +28,8 @@
     ]
   },
   "dependencies": {
-    "pako": "2.1.0"
+    "pako": "2.1.0",
+    "roughjs": "4.6.6"
   },
   "devDependencies": {
     "@commitlint/cli": "19.4.0",
