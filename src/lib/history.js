@@ -1,4 +1,8 @@
-import { getCompressed, getDecompressed, validateContext } from './utils';
+import {
+  getCompressed,
+  getDecompressed,
+  validateContext as isValidContext,
+} from './utils';
 
 const MAX_HISTORY_INDEX = 15;
 
@@ -21,18 +25,16 @@ export default class CanvasHistory {
   }
 
   update = (ctx, width, height) => {
-    if (this._historyIndex < this._history.length - 1) {
+    if (this._historyIndex !== this._history.length - 1) {
       this._history = this._history.slice(0, this._historyIndex + 1);
     }
 
-    const compressed = getCompressed(ctx.getImageData(0, 0, width, height));
-
-    this._history.push({ data: compressed, w: width, h: height });
-    this._historyIndex++;
+    this.forward();
+    this._history.push(getCompressed(ctx.getImageData(0, 0, width, height)));
 
     if (this._history.length > MAX_HISTORY_INDEX) {
       this._history.shift();
-      this._historyIndex--;
+      this.backward();
     }
   };
 
@@ -49,33 +51,42 @@ export default class CanvasHistory {
   }
 
   goToLast(ctx) {
-    if (validateContext(ctx)) return;
+    if (!isValidContext(ctx)) return;
     const imgData = getDecompressed(this.getLast());
     ctx.putImageData(imgData, 0, 0);
   }
 
   undo(ctx) {
-    if (this._historyIndex <= 0 || validateContext(ctx)) {
-      return;
+    if (!this.hasUndo() || !isValidContext(ctx)) return false;
+    this.backward();
+    const historyBackward = this._history[this._historyIndex];
+    if (historyBackward) {
+      const imgData = getDecompressed(historyBackward);
+      ctx.putImageData(imgData, 0, 0);
     }
-    this.subIndex();
-    const imgData = this.getDecompressed(this._history[this._historyIndex]);
-    ctx.putImageData(imgData, 0, 0);
+    return !historyBackward;
   }
 
   redo(ctx) {
-    if (this._historyIndex >= this._history.length - 1 || validateContext(ctx))
-      return;
-    this.addIndex();
-    const imgData = this.getDecompressed(this._history[this._historyIndex]);
+    if (!this.hasRedo() || !isValidContext(ctx)) return;
+    this.forward();
+    const imgData = getDecompressed(this._history[this._historyIndex]);
     ctx.putImageData(imgData, 0, 0);
   }
 
-  subIndex() {
+  hasUndo() {
+    return this._historyIndex >= 0;
+  }
+
+  hasRedo() {
+    return this._historyIndex < this._history.length - 1;
+  }
+
+  backward() {
     this._historyIndex--;
   }
 
-  addIndex() {
+  forward() {
     this._historyIndex++;
   }
 

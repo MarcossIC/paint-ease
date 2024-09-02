@@ -1,120 +1,226 @@
+/* eslint-disable no-param-reassign */
 import './styles/normalize.css';
 import './styles/style.css';
 import {
   TOOL_ICON,
-  TOOL_ERASER_ID,
   TOOL_CLICK_ID,
   TOOL_TRASH_ID,
-  TOOL_UNDO_ID,
+  TOOL_CURSOR_MAP,
+  EVENTS,
+  TOOL_ERASER_ID,
+  CURSOR_TYPE,
 } from './constants';
-import { $, $$ } from './lib/utils';
+import { $, addEventListener, debounce } from './lib/utils';
 import Canvas from './lib/canvas';
 import ToolsHandler from './lib/toolsHandler';
+import { store } from './lib/appState';
+import Emitter from './domain/emitter';
+import { KEYS } from './lib/keyUtilities';
+import { openColorDropper } from './lib/colorDropper';
 
 (() => {
+  // --------------- VARIABLES ---------------------
   const canvasHtml = $('#canvas');
-  const tools = $$('#tool-controls .btn');
-  const historyTools = $$('#history-controls .btn');
   const btnUndo = $('#btn-undo');
+  const btnRedo = $('#btn-redo');
+  const toolsContainer = $('#tool-controls');
   const canvas = new Canvas(canvasHtml);
   const toolHandler = new ToolsHandler(canvas, TOOL_CLICK_ID);
+  const onRemoveEventListeners = new Emitter();
+  const onRemoveHistoryListener = new Emitter();
 
-  const changeSelectedTool = e => {
-    const toolTarget = e.target.closest('label');
-    const selectedToolId = toolHandler.currentTool;
-    const isCurrentSelected = selectedToolId === toolTarget?.id;
+  // --------------- EVENTS ---------------------
 
-    console.log({ toolTarget });
-    if (!toolTarget || isCurrentSelected) {
+  const onKeydown = event => {
+    // Normalizar las teclas cuando se presiona CapsLock / Mayus
+
+    if (
+      'Proxy' in window &&
+      ((!event.shiftKey && /^[A-Z]$/.test(event.key)) ||
+        (event.shiftKey && /^[a-z]$/.test(event.key)))
+    ) {
+      // Si el objeto Proxy es soportado y se esta presionando el capslock y otra tecla
+      // Redefinimos el evento
+      event = new Proxy(event, {
+        get(ev, prop) {
+          const value = ev[prop];
+          if (typeof value === 'function') {
+            return value.bind(ev);
+          }
+          if (prop === 'key') {
+            return event.shiftKey ? ev.key.toUpperCase() : ev.key.toLowerCase();
+          }
+
+          return value;
+        },
+      });
+    }
+
+    if (event.key === KEYS.SPACE) {
+      canvas.isHoldingSpace = true;
+      store.setState({ cursor: CURSOR_TYPE.GRAB });
+      event.preventDefault();
+    }
+
+    // Cuenta gotas
+    const lowerCased = event.key.toLocaleLowerCase();
+    const isPickingStroke = lowerCased === KEYS.S && event.shiftKey;
+
+    if (isPickingStroke) {
+      openColorDropper({
+        type: 'stroke',
+        canvas,
+      });
+    }
+  };
+
+  const onKeyUp = event => {
+    if (event.key === KEYS.SPACE) {
+      const cursorType =
+        TOOL_CURSOR_MAP[toolHandler.currentTool.id] || TOOL_CURSOR_MAP.default;
+      store.setState({ cursor: cursorType, zoom: 2 });
+    }
+  };
+
+  const onChangeTool = e => {
+    const { target } = e;
+    if (target.tagName === 'INPUT' && target.type === 'radio') {
+      const toolTarget = target.closest('label');
+      const selectedToolId = toolHandler.currentTool;
+      const isCurrentSelected = selectedToolId === toolTarget.id;
+
+      if (!toolTarget || isCurrentSelected) {
+        toolHandler.resetToolState();
+        return;
+      }
+
+      if (toolTarget.id !== TOOL_TRASH_ID) toolHandler.currentTool = toolTarget.id;
+      // Se cambia el cursor segun el tipo de herramienta
+      const cursorType = TOOL_CURSOR_MAP[toolTarget.id] || TOOL_CURSOR_MAP.default;
+      if (cursorType) {
+        store.setState({ cursor: cursorType });
+      }
+
+      canvas.context.globalCompositeOperation =
+        toolHandler.currentTool === TOOL_ERASER_ID
+          ? 'destination-out'
+          : 'source-over';
+
+      // Si se clickeo la herramienta de limpiado
+      if (toolTarget.id === TOOL_TRASH_ID) {
+        target.checked = false;
+        canvas.clear();
+        canvas.history.reset();
+        store.setState({ hasHistory: Symbol(false) });
+      }
       toolHandler.resetToolState();
-      return;
     }
-    if (toolTarget.id !== TOOL_TRASH_ID) toolHandler.currentTool = toolTarget.id;
-
-    if (toolTarget.id === TOOL_CLICK_ID) {
-      canvas.canvas.style.removeProperty('--current-cursor');
-    } else if (toolTarget.id === TOOL_ERASER_ID) {
-      canvas.canvas.style.setProperty(
-        '--current-cursor',
-        `url("/icons/cursorEraser.png") 10 10, auto`
-      );
-    } else if (toolTarget.id === TOOL_TRASH_ID) {
-      const inputTarget = toolTarget.querySelector('input');
-      inputTarget.checked = false;
-      canvas.clear();
-      canvas.history.reset();
-      historyTools.forEach(tool => {
-        tool.disabled = true;
-      });
-    } else {
-      canvas.canvas.style.setProperty('--current-cursor', `crosshair`);
-    }
-    toolHandler.resetToolState();
   };
 
-  const historyMove = id => {
-    if (id === TOOL_UNDO_ID) {
-      return canvas.goBackHistory();
-    }
-    canvas.history.redo(canvas.context);
-    const idx = canvas.history.index;
-    return idx < 0 || canvas.history.isInLast();
-  };
-
-  const initTools = () => {
-    tools.forEach(controlTool => {
-      controlTool.insertAdjacentHTML('beforeend', TOOL_ICON[controlTool.id]);
-      controlTool.addEventListener('click', changeSelectedTool);
-    });
-    historyTools.forEach(historyTool => {
-      const { id } = historyTool;
-      historyTool.insertAdjacentHTML('beforeend', TOOL_ICON[id]);
-      historyTool.addEventListener('click', () => {
-        historyTool.disabled = historyMove(id);
-      });
-    });
-  };
-
-  const disableContextMenu = () => {
-    document.addEventListener('contextmenu', event => event.preventDefault());
-  };
-
-  const startDraw = e => {
+  const onPointerDown = e => {
     e.preventDefault();
     if (toolHandler.currentTool !== TOOL_CLICK_ID && e.isPrimary) {
-      toolHandler.isDrawing = true;
-      document.body.style.setProperty('--paintease-pointers-events', 'none');
-      toolHandler.preparingTheBrush([e.offsetX, e.offsetY]);
-      canvas.canvas.addEventListener('pointermove', toolHandler.useTool);
+      store.setState({ isDrawing: true });
+      toolHandler.preparingTheBrush(e);
     }
   };
 
-  const stopDraw = e => {
+  const onPointerMove = e => {
+    const { isDrawing } = store.getState();
+    if (isDrawing) {
+      toolHandler.useTool(e);
+    }
+  };
+
+  const onPointerStop = e => {
     e.preventDefault();
-    if (toolHandler.isDrawing) {
-      document.body.style.setProperty('--paintease-pointers-events', 'all');
-      toolHandler.pencil.pointsBuffer = [];
-      toolHandler.isDrawing = false;
-      canvas.canvas.removeEventListener('pointermove', toolHandler.useTool);
+    const { isDrawing } = store.getState();
+    if (isDrawing) {
       canvas.saveState();
-      if (btnUndo.disabled) btnUndo.disabled = false;
+      store.setState({ isDrawing: false, hasHistory: Symbol(true) });
     }
   };
 
-  const prepareCanvas = () => {
-    canvas.canvas.addEventListener('dragstart', () => false);
+  const onContextMenu = e => {
+    e.preventDefault();
+  };
+  // --------------- STORE SUBSCRIPTIONS ---------------------
 
-    canvas.canvas.addEventListener('pointerdown', startDraw);
-    canvas.canvas.addEventListener('pointerup', stopDraw);
-    canvas.canvas.addEventListener('pointerleave', stopDraw);
-    canvas.canvas.addEventListener('pointerout', stopDraw);
-    canvas.canvas.addEventListener('pointercancel', stopDraw);
+  store.subscribe('cursor', newValue => {
+    canvasHtml.style.setProperty('--current-cursor', newValue);
+  });
+  store.subscribe('isDrawing', newValue => {
+    document.body.style.setProperty(
+      '--paintease-pointers-events',
+      newValue ? 'none' : 'all'
+    );
+  });
+  store.subscribe('hasHistory', newValue => {
+    let isDisableRedo;
+    let isDisableUndo;
+    const isActive = newValue.description === 'true';
+    if (isActive) {
+      // Use denial to disabled
+      isDisableRedo = !canvas.history.hasRedo();
+      isDisableUndo = !canvas.history.hasUndo();
+    } else {
+      isDisableUndo = !isActive;
+      isDisableRedo = !isActive;
+    }
+    btnRedo.disabled = isDisableRedo;
+    btnUndo.disabled = isDisableUndo;
+  });
+
+  // --------------- EVENT MANAGER ---------------------
+
+  const removeEventListeners = () => {
+    onRemoveEventListeners.trigger();
+  };
+
+  const addEventListeners = () => {
+    removeEventListeners();
+
+    onRemoveEventListeners.once(
+      addEventListener(document, EVENTS.KEYDOWN, onKeydown),
+      addEventListener(document, EVENTS.KEYUP, onKeyUp),
+      addEventListener(document, EVENTS.CONTEXT_MENU, onContextMenu),
+      addEventListener(canvasHtml, EVENTS.DRAG_START, () => false),
+      addEventListener(window, EVENTS.LOAD, canvas.startCanvas),
+      addEventListener(window, EVENTS.RESIZE, debounce(canvas.resizeCanvas, 75)),
+      addEventListener(toolsContainer, EVENTS.CLICK, onChangeTool),
+      addEventListener(canvasHtml, EVENTS.POINTER_DOWN, onPointerDown),
+      addEventListener(canvasHtml, EVENTS.POINTER_MOVE, onPointerMove),
+      addEventListener(canvasHtml, EVENTS.POINTER_UP, onPointerStop),
+      addEventListener(canvasHtml, EVENTS.POINTER_LEAVE, onPointerStop),
+      addEventListener(canvasHtml, EVENTS.POINTER_CANCEL, onPointerStop),
+      addEventListener(canvasHtml, EVENTS.POINTER_OUT, onPointerStop)
+    );
+  };
+
+  const initHistoryTools = () => {
+    onRemoveHistoryListener.trigger();
+    const redoId = btnRedo.id;
+    const undoId = btnUndo.id;
+    btnRedo.insertAdjacentHTML('beforeend', TOOL_ICON[redoId]);
+    btnUndo.insertAdjacentHTML('beforeend', TOOL_ICON[undoId]);
+
+    onRemoveHistoryListener.once(
+      addEventListener(btnRedo, EVENTS.CLICK, e => {
+        const btn = e.target;
+        btn.disabled = !canvas.canvasRedo();
+        btnUndo.disabled = !canvas.history.hasUndo();
+      }),
+      addEventListener(btnUndo, EVENTS.CLICK, e => {
+        const btn = e.target;
+        btn.disabled = !canvas.canvasUndo();
+        btnRedo.disabled = !canvas.history.hasRedo();
+      })
+    );
   };
 
   const init = () => {
-    disableContextMenu();
-    initTools();
-    prepareCanvas();
+    addEventListeners();
+    initHistoryTools();
   };
 
   init();

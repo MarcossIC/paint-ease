@@ -62,6 +62,18 @@ export default [
     },
 
     rules: {
+      'no-unused-vars': [
+        'error',
+        {
+          vars: 'local',
+          varsIgnorePattern: '^_',
+          args: 'none',
+          argsIgnorePattern: '[iI]gnored',
+          caughtErrors: 'all',
+          destructuredArrayIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
       'prettier/prettier': 'error',
       'no-underscore-dangle': 'off',
       'no-console': 'off',

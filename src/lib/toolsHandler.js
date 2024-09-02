@@ -1,5 +1,6 @@
 import { drawMethods } from './draw';
-import Pencil from './pencil';
+import { TOOL_BRUSH_ID, TOOL_ERASER_ID } from '../constants';
+import { store } from './appState';
 
 export default class ToolsHandler {
   _canvas;
@@ -8,16 +9,14 @@ export default class ToolsHandler {
 
   _toolSetting;
 
-  _pencil;
-
   constructor(canvas, defaultTool) {
     this._canvas = canvas;
-    this._pencil = new Pencil();
     this._toolState = {
       ctx: canvas.context,
-      axis: { X: 0, Y: 0 },
-      prev: { X: 0, Y: 0 },
+      axis: [0, 0],
+      last: [0, 0],
       isPaddingOn: false,
+      radius: 10,
     };
     this._toolSetting = {
       color: '#000000',
@@ -27,56 +26,33 @@ export default class ToolsHandler {
     };
   }
 
+  getMousePosition(evt) {
+    const { zoom } = store.getState();
+    const [left, top] = this._canvas.getCanvasOffsets();
+    return [(evt.clientX - left) / zoom, (evt.clientY - top) / zoom];
+  }
+
+  /* Cuando dibuja, en pointer move */
   useTool = e => {
     e.preventDefault();
-    // No ejeucta si, no se esta dibujando
-    if (!this._pencil.isDrawing) return;
 
-    // Recupera las cordenadas del puntero en el canvas
-    const axis = [e.offsetX, e.offsetY];
-    // Agregar al buffer de puntos
-    this._pencil.buffer(axis);
-    this._canvas.putImageData();
+    const axis = this.getMousePosition(e);
     this.setCurrentAxis(axis);
-    drawMethods[this._toolSetting.currentTool](this._toolState);
-
-    /*
-    // Interpolación
-    const lastPoint =
-      this._pencil.pointsBuffer[this._pencil.pointsBuffer.length - 1];
-    const distance = Math.sqrt(
-      (axis[0] - lastPoint[0]) ** 2 + (axis[1] - lastPoint[1]) ** 2
-    );
-
-    if (distance > this._pencil.interpolationThreshold) {
-      this.interpolateAndDraw(lastPoint, axis);
+    const tool = this._toolSetting.currentTool;
+    const isDrawLine = tool === TOOL_BRUSH_ID || tool === TOOL_ERASER_ID;
+    if (!isDrawLine) {
+      this._canvas.restoreImageData();
+    } else {
+      this.setPrevAxis(axis);
     }
-
-    this._pencil.pointsBuffer.push(axis);
-    this.setCurrentAxis(axis);
-    drawMethods[this._toolSetting.currentTool](this._toolState); */
+    drawMethods[tool](this._toolState);
   };
 
-  interpolateAndDraw = (start, end) => {
-    const dx = end[0] - start[0];
-    const dy = end[1] - start[1];
-
-    const steps = Math.ceil(
-      Math.max(Math.abs(dx), Math.abs(dy)) / this._pencil.stepReductionFactor
-    );
-
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const x = start[0] + dx * t;
-      const y = start[1] + dy * t;
-      this.setCurrentAxis([x, y]);
-      drawMethods[this._toolSetting.currentTool](this._toolState);
-    }
-  };
-
-  /* Captura las parametros del pincel (coords donde se empieza, colores, tamaños, nueva image data) */
-  preparingTheBrush(axes) {
-    this.setPrevAxis(axes);
+  /* Prepara el pincel cuando se ejecuta pointer down */
+  preparingTheBrush(e) {
+    const axis = this.getMousePosition(e);
+    this.setCurrentAxis(axis);
+    this.setPrevAxis(axis);
     this._canvas.applySettings(this._toolSetting);
     this._toolState.ctx = this._canvas.context;
   }
@@ -86,14 +62,12 @@ export default class ToolsHandler {
     this.setCurrentAxis([0, 0]);
   }
 
-  setCurrentAxis([X, Y]) {
-    this._toolState.axis.X = X;
-    this._toolState.axis.Y = Y;
+  setCurrentAxis(axis) {
+    this._toolState.axis = axis;
   }
 
-  setPrevAxis([X, Y]) {
-    this._toolState.prev.X = X;
-    this._toolState.prev.Y = Y;
+  setPrevAxis(axis) {
+    this._toolState.last = axis;
   }
 
   togglePaddingOn() {
@@ -110,17 +84,5 @@ export default class ToolsHandler {
 
   get currentTool() {
     return this._toolSetting.currentTool;
-  }
-
-  get isDrawing() {
-    return this._pencil.isDrawing;
-  }
-
-  set isDrawing(updated) {
-    this._pencil.isDrawing = updated;
-  }
-
-  get pencil() {
-    return this._pencil;
   }
 }

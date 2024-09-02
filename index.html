@@ -24,6 +24,7 @@
   </head>
 
   <body>
+    <div id="color-dropper" class="hidden absolute top-0 left-0"></div>
     <header>
       <h1 class="visually-hidden">Paint Ease</h1>
     </header>
@@ -57,6 +58,23 @@
                       aria-label="Neutral tool, stop drawing"
                       aria-keyshortcuts="1"
                       checked />
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M3 12l3 0" />
+                      <path d="M12 3l0 3" />
+                      <path d="M7.8 7.8l-2.2 -2.2" />
+                      <path d="M16.2 7.8l2.2 -2.2" />
+                      <path d="M7.8 16.2l-2.2 2.2" />
+                      <path d="M12 12l9 3l-4 2l-2 4l-3 -9" />
+                    </svg>
                   </label>
                   <label
                     id="btn-brush"
@@ -70,6 +88,21 @@
                       aria-labelledby="btn-brush"
                       aria-label="Brush tool, start drawing"
                       aria-keyshortcuts="2" />
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M3 21v-4a4 4 0 1 1 4 4h-4" />
+                      <path d="M21 3a16 16 0 0 0 -12.8 10.2" />
+                      <path d="M21 3a16 16 0 0 1 -10.2 12.8" />
+                      <path d="M10.6 9a9 9 0 0 1 4.4 4.4" />
+                    </svg>
                   </label>
                   <label
                     id="btn-rectangle"
@@ -83,6 +116,19 @@
                       aria-labelledby="btn-rectangle"
                       aria-label="Brush rectangle tool, start drawing rectangles"
                       aria-keyshortcuts="3" />
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path
+                        d="M3 3m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" />
+                    </svg>
                   </label>
                   <label
                     id="btn-triangle"
@@ -96,6 +142,19 @@
                       aria-labelledby="btn-triangle"
                       aria-label="Brush triangle tool, start drawing triangles"
                       aria-keyshortcuts="4" />
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path
+                        d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
+                    </svg>
                   </label>
                   <label
                     id="btn-circle"
@@ -109,6 +168,18 @@
                       aria-labelledby="btn-circle"
                       aria-label="Brush circle tool, start drawing circles"
                       aria-keyshortcuts="5" />
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                    </svg>
                   </label>
                   <label
                     id="btn-eraser"
@@ -122,6 +193,20 @@
                       aria-labelledby="btn-eraser"
                       aria-label="Eraser tool"
                       aria-keyshortcuts="6" />
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path
+                        d="M19 20h-10.5l-4.21 -4.3a1 1 0 0 1 0 -1.41l10 -10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3" />
+                      <path d="M18 13.3l-6.3 -6.3" />
+                    </svg>
                   </label>
                   <label
                     id="btn-trash-board"
@@ -135,6 +220,22 @@
                       aria-labelledby="btn-trash-board"
                       aria-label="Clean board tool"
                       aria-keyshortcuts="0" />
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M4 7l16 0" />
+                      <path d="M10 11l0 6" />
+                      <path d="M14 11l0 6" />
+                      <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                      <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                    </svg>
                   </label>
                 </div>
               </div>
