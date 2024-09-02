@@ -1,4 +1,4 @@
-import { drawMethods } from './draw';
+import { drawMethods, drawSmoothLine } from './draw';
 import { TOOL_BRUSH_ID, TOOL_ERASER_ID } from '../constants';
 import { store } from './appState';
 
@@ -9,8 +9,11 @@ export default class ToolsHandler {
 
   _toolSetting;
 
+  _points;
+
   constructor(canvas, defaultTool) {
     this._canvas = canvas;
+    this._points = [];
     this._toolState = {
       ctx: canvas.context,
       axis: [0, 0],
@@ -29,7 +32,11 @@ export default class ToolsHandler {
   getMousePosition(evt) {
     const { zoom } = store.getState();
     const [left, top] = this._canvas.getCanvasOffsets();
-    return [(evt.clientX - left) / zoom, (evt.clientY - top) / zoom];
+
+    return this.getFixedCoords([
+      (evt.clientX - left) / zoom,
+      (evt.clientY - top) / zoom,
+    ]);
   }
 
   /* Cuando dibuja, en pointer move */
@@ -37,17 +44,28 @@ export default class ToolsHandler {
     e.preventDefault();
 
     const axis = this.getMousePosition(e);
+    console.log({ x: axis[0], y: axis[1] });
     this.setCurrentAxis(axis);
     const tool = this._toolSetting.currentTool;
     const isDrawLine = tool === TOOL_BRUSH_ID || tool === TOOL_ERASER_ID;
+
     if (!isDrawLine) {
       this._canvas.restoreImageData();
-    }
-    drawMethods[tool](this._toolState);
-    if (isDrawLine) {
+      drawMethods[tool](this._toolState);
+    } else {
+      this.drawPoints(axis);
       this.setPrevAxis(axis);
     }
   };
+
+  drawPoints(axis) {
+    this._points.push(axis);
+    if (this._points.length >= 3) {
+      drawSmoothLine(this._toolState.ctx, this._points);
+      // Mantén los últimos 3 puntos para la siguiente curva
+      this._points = this._points.slice(-3);
+    }
+  }
 
   /* Prepara el pincel cuando se ejecuta pointer down */
   preparingTheBrush(e) {
@@ -56,6 +74,16 @@ export default class ToolsHandler {
     this.setPrevAxis(axis);
     this._canvas.applySettings(this._toolSetting);
     this._toolState.ctx = this._canvas.context;
+    this._points = [axis];
+  }
+
+  getFixedCoords(axis) {
+    const [X, Y] = axis;
+    const { size } = this._toolSetting;
+    const isEven = size % 2 === 0;
+    if (isEven) return axis;
+
+    return [X + 0.5, Y + 0.5];
   }
 
   resetToolState() {

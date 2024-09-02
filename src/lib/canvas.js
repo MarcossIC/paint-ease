@@ -1,3 +1,4 @@
+import { RoughGenerator } from 'roughjs/bin/generator';
 import DeviceContext from '../domain/device';
 import CanvasHistory from './history';
 
@@ -20,6 +21,9 @@ export default class Canvas {
   /** @type {boolean} */
   _isHolding;
 
+  /** @type {RoughGenerator} rx */
+  _rg;
+
   /**
    * Crea un Canvas Object. Agrupa las funciones aplicadas al canvas
    *
@@ -27,6 +31,7 @@ export default class Canvas {
    */
   constructor(canvasHtml) {
     this._canvas = canvasHtml;
+    this._rg = new RoughGenerator();
     this._context2D = this._canvas.getContext('2d');
     this._history = new CanvasHistory();
     this._snapshot = null;
@@ -40,6 +45,7 @@ export default class Canvas {
     this._context2D.fillStyle = '#fafafa';
     this._context2D.strokeStyle = '#fafafa';
     this._context2D.fillRect(0, 0, this._canvas.width, this._canvas.height);
+
     this.setSnapshot();
   };
 
