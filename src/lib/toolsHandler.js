@@ -42,10 +42,11 @@ export default class ToolsHandler {
     const isDrawLine = tool === TOOL_BRUSH_ID || tool === TOOL_ERASER_ID;
     if (!isDrawLine) {
       this._canvas.restoreImageData();
-    } else {
-      this.setPrevAxis(axis);
     }
     drawMethods[tool](this._toolState);
+    if (isDrawLine) {
+      this.setPrevAxis(axis);
+    }
   };
 
   /* Prepara el pincel cuando se ejecuta pointer down */
