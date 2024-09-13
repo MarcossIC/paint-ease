@@ -7,7 +7,10 @@
   --paintease-color-text-purple: #19075e;
   --paintease-color-text: #1a1a1a;
   --paintease-color-text-200: #585858;
-  --current-cursor: default;
+  --default-cursor: url('./cursors/default.png') 3 3, default;
+  --pointer-cursor: url('./cursors/pointer.webp') 7 5, pointer;
+  --unavalaible-cursor: url('./cursors/unavailable.webp') 3 3, not-allowed;
+  --current-cursor: var(--default-cursor);
 
   --paintease-rounded-sm: 6px;
   --paintease-rounded-md: 12px;
@@ -17,12 +20,18 @@
   --sat: env(safe-area-inset-top);
 }
 
+.custom-cursor-default {
+  cursor: var(--default-cursor);
+}
+.custom-cursor-pointer {
+  cursor: var(--pointer-cursor);
+}
+
 /* BODY */
 body {
   --paintease-pointers-events: all;
   height: 100%;
   background-color: var(--paintease-color-bg);
-  cursor: default;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -60,7 +69,7 @@ body {
 .user-none-cursor {
   pointer-events: none;
   user-select: none;
-  cursor: default;
+  cursor: var(--default-cursor);
 }
 .user-none-touch {
   touch-action: none;
@@ -107,7 +116,7 @@ body {
   color: var(--color-text);
   background-color: var(--control-bg);
   width: 100%;
-  cursor: pointer;
+  cursor: var(--pointer-cursor);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -128,7 +137,7 @@ body {
   &:is(:disabled, :has(> input:disabled)) {
     --color-text: var(--paintease-color-text-200);
     opacity: 0.65;
-    cursor: default;
+    cursor: var(--unavalaible-cursor);
   }
 }
 
@@ -157,7 +166,7 @@ body {
       position: absolute;
       opacity: 0;
       pointer-events: none;
-      cursor: default;
+      cursor: var(--default-cursor);
       appearance: auto;
     }
 

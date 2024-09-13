@@ -1,4 +1,13 @@
-import { isDarwin } from '../constants';
+import {
+  isDarwin,
+  TOOL_CLICK_ID,
+  TOOL_BRUSH_ID,
+  TOOL_RECTANGLE_ID,
+  TOOL_CIRCLE_ID,
+  TOOL_TRIANGLE_ID,
+  TOOL_ERASER_ID,
+  TOOL_TRASH_ID,
+} from './constants';
 
 export const CODES = {
   EQUAL: 'Equal',
@@ -92,6 +101,27 @@ export const isArrowKey = key =>
   key === KEYS.ARROW_RIGHT ||
   key === KEYS.ARROW_DOWN ||
   key === KEYS.ARROW_UP;
+
+export const KEYS_TO_TOOLS = {
+  [KEYS['1']]: TOOL_CLICK_ID,
+  [KEYS['2']]: TOOL_BRUSH_ID,
+  [KEYS['3']]: TOOL_RECTANGLE_ID,
+  [KEYS['4']]: TOOL_TRIANGLE_ID,
+  [KEYS['5']]: TOOL_CIRCLE_ID,
+  [KEYS['6']]: TOOL_ERASER_ID,
+  [KEYS['7']]: TOOL_TRASH_ID,
+  [KEYS.R]: TOOL_TRASH_ID,
+};
+
+export const isActionKey = key =>
+  key === KEYS[1] ||
+  key === KEYS[2] ||
+  key === KEYS[3] ||
+  key === KEYS[4] ||
+  key === KEYS[5] ||
+  key === KEYS[6] ||
+  key === KEYS[7] ||
+  key === KEYS.R;
 
 /**
  * @param {MouseEvent | KeyboardEvent} event

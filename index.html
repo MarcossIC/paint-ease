@@ -23,7 +23,7 @@
     <title>Paint Ease - Vanilla JavaScript Paint</title>
   </head>
 
-  <body>
+  <body class="custom-cursor-default">
     <div id="color-dropper" class="hidden absolute top-0 left-0"></div>
     <header>
       <h1 class="visually-hidden">Paint Ease</h1>
@@ -35,14 +35,14 @@
       <div class="size-full absolute user-none z-[4]">
         <div class="tools-layer absolute user-none z-[2] fixed-pointer-container">
           <div
-            class="w-full grid gap-8 items-start cursor-default !pointer-events-none grid-cols-[1fr,2fr,1fr] fixed-pointer-container">
+            class="w-full grid gap-8 items-start custom-cursor-default !pointer-events-none grid-cols-[1fr,2fr,1fr] fixed-pointer-container">
             <h2 class="visually-hidden">Menu tools board</h2>
             <div></div>
             <section
-              class="flex-center !pointer-events-none cursor-default fixed-pointer-container">
+              class="flex-center !pointer-events-none custom-cursor-default fixed-pointer-container">
               <div
                 id="tool-controls"
-                class="bg-gray-100 relative shadow-md cursor-default flex-center user-none rounded-xl p-1"
+                class="bg-gray-100 relative shadow-md custom-cursor-default flex-center user-none rounded-xl p-1"
                 tabindex="1">
                 <div class="w-full flex gap-x-2">
                   <label
@@ -244,17 +244,16 @@
         </div>
         <footer
           id="tool-footer"
-          class="w-full absolute bottom-4 flex justify-end items-start cursor-default !pointer-events-none px-4 fixed-pointer-container">
+          class="w-full absolute bottom-4 flex justify-end items-start custom-cursor-default !pointer-events-none px-4 fixed-pointer-container">
           <div
-            class="size-full transition-transform ease-in-out duration-500 cursor-default !pointer-events-none fixed-pointer-container">
+            class="size-full transition-transform ease-in-out duration-500 custom-cursor-default !pointer-events-none fixed-pointer-container">
             <section
               class="grid grid-flow-row grid-cols-[auto] grid-auto-rows-min fixed-pointer-container gap-8">
               <h2 class="visually-hidden">Board actions</h2>
-              <div class="flex justify-end items-center">
-                <div></div>
+              <div class="absolute bottom-0 right-[2%]">
                 <div
                   id="history-controls"
-                  class="w-auto flex bg-gray-200 rounded-xl cursor-default"
+                  class="w-auto flex bg-gray-200 rounded-xl custom-cursor-default"
                   tabindex="9">
                   <button
                     id="btn-undo"

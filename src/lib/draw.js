@@ -4,7 +4,7 @@ import {
   TOOL_ERASER_ID,
   TOOL_RECTANGLE_ID,
   TOOL_TRIANGLE_ID,
-} from '../constants';
+} from '../utils/constants';
 
 export const drawLine = ({ ctx, axis, last }) => {
   const [X, Y] = axis;

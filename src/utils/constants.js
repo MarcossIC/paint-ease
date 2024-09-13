@@ -45,6 +45,7 @@ export const EVENTS = {
   POINTER_OUT: 'pointerout',
   POINTER_LEAVE: 'pointerleave',
   POINTER_CANCEL: 'pointercancel',
+  TOUCH_MOVE: 'touchmove',
   STATE_CHANGE: 'statechange',
   FOCUS: 'focus',
   CONTEXT_MENU: 'contextmenu',
@@ -110,15 +111,6 @@ export const TEXT_ALIGN = {
   RIGHT: 'right',
 };
 
-export const ELEMENT_READY_TO_ERASE_OPACITY = 20;
-
-// Radius represented as 25% of element's largest side (width/height).
-// Used for LEGACY and PROPORTIONAL_RADIUS algorithms, or when the element is
-// below the cutoff size.
-export const DEFAULT_PROPORTIONAL_RADIUS = 0.25;
-// Fixed radius for the ADAPTIVE_RADIUS algorithm. In pixels.
-export const DEFAULT_ADAPTIVE_RADIUS = 32;
-
 export const ROUGHNESS = {
   architect: 0,
   artist: 1,
@@ -126,15 +118,16 @@ export const ROUGHNESS = {
 };
 
 export const CURSOR_TYPE = {
-  DEFAULT: 'default',
+  DEFAULT: 'var(--default-cursor)',
   TEXT: 'text',
-  CROSSHAIR: 'crosshair',
-  GRABBING: 'grabbing',
-  GRAB: 'grab',
-  POINTER: 'pointer',
+  CROSSHAIR: 'url("./cursors/crosshair.webp") 15 15, crosshair',
+  GRABBING: 'url("./cursors/grabbing.webp") 15 15, grabbing',
+  GRAB: 'url("./cursors/grab.webp") 15 15, grab',
+  POINTER: 'var(--pointer-cursor)',
   MOVE: 'move',
   AUTO: '',
-  ERASER: `url("./icons/cursorEraser.png") 10 10, auto`,
+  ERASER: `url("./cursors/eraser.webp") 15 15, auto`,
+  UNAVAILABLE: `var(--unavalaible-cursor)`,
 };
 
 export const TOOL_CURSOR_MAP = {

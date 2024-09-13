@@ -9,13 +9,13 @@ import {
   EVENTS,
   TOOL_ERASER_ID,
   CURSOR_TYPE,
-} from './constants';
-import { $, addEventListener, debounce } from './lib/utils';
+} from './utils/constants';
+import { $, $FROM, addEventListener } from './utils/utils';
 import Canvas from './lib/canvas';
 import ToolsHandler from './lib/toolsHandler';
 import { store } from './lib/appState';
 import Emitter from './domain/emitter';
-import { KEYS } from './lib/keyUtilities';
+import { KEYS, isActionKey, KEYS_TO_TOOLS } from './utils/keyUtilities';
 import { openColorDropper } from './lib/colorDropper';
 
 (() => {
@@ -29,11 +29,44 @@ import { openColorDropper } from './lib/colorDropper';
   const onRemoveEventListeners = new Emitter();
   const onRemoveHistoryListener = new Emitter();
 
+  // --------------- ACTIONS ---------------------
+  const onRedo = () => {
+    btnRedo.disabled = !canvas.canvasRedo();
+    btnUndo.disabled = !canvas.history.hasUndo();
+  };
+
+  const onUndo = () => {
+    btnUndo.disabled = !canvas.canvasUndo();
+    btnRedo.disabled = !canvas.history.hasRedo();
+  };
+  const onSetTool = (toolUpdated, target) => {
+    console.log({ toolUpdated });
+    let cursorType;
+    if (toolUpdated !== TOOL_TRASH_ID) {
+      if (target) target.click();
+      toolHandler.currentTool = toolUpdated;
+      cursorType = TOOL_CURSOR_MAP[toolUpdated] || TOOL_CURSOR_MAP.default;
+      canvas.context.globalCompositeOperation =
+        toolUpdated === TOOL_ERASER_ID ? 'destination-out' : 'source-over';
+    }
+    console.log({ cursorType });
+    if (cursorType) {
+      store.setState({ cursor: cursorType });
+    }
+  };
+  const onCleanScreen = target => {
+    if (target) target.checked = false;
+    canvas.clear();
+    if (canvas.history.hasEntries()) {
+      canvas.saveState();
+      store.setState({ hasHistory: Symbol(true) });
+    }
+  };
+
   // --------------- EVENTS ---------------------
 
   const onKeydown = event => {
     // Normalizar las teclas cuando se presiona CapsLock / Mayus
-
     if (
       'Proxy' in window &&
       ((!event.shiftKey && /^[A-Z]$/.test(event.key)) ||
@@ -55,11 +88,28 @@ import { openColorDropper } from './lib/colorDropper';
         },
       });
     }
-
     if (event.key === KEYS.SPACE) {
       canvas.isHoldingSpace = true;
       store.setState({ cursor: CURSOR_TYPE.GRAB });
       event.preventDefault();
+    }
+
+    if (event[KEYS.CTRL_OR_CMD]) {
+      event.preventDefault();
+      if (event.key === KEYS.Z) {
+        onUndo();
+      } else if (event.key === KEYS.Y) {
+        onRedo();
+      } else if (isActionKey(event.key)) {
+        const toolId = KEYS_TO_TOOLS[event.key];
+
+        const btn = $FROM(toolsContainer, `#${toolId}`);
+        if (toolId === TOOL_TRASH_ID) {
+          onCleanScreen();
+          return;
+        }
+        onSetTool(toolId, btn);
+      }
     }
 
     // Cuenta gotas
@@ -78,7 +128,7 @@ import { openColorDropper } from './lib/colorDropper';
     if (event.key === KEYS.SPACE) {
       const cursorType =
         TOOL_CURSOR_MAP[toolHandler.currentTool.id] || TOOL_CURSOR_MAP.default;
-      store.setState({ cursor: cursorType, zoom: 2 });
+      store.setState({ cursor: cursorType, zoom: 1 });
     }
   };
 
@@ -94,25 +144,10 @@ import { openColorDropper } from './lib/colorDropper';
         return;
       }
 
-      if (toolTarget.id !== TOOL_TRASH_ID) toolHandler.currentTool = toolTarget.id;
-      // Se cambia el cursor segun el tipo de herramienta
-      const cursorType = TOOL_CURSOR_MAP[toolTarget.id] || TOOL_CURSOR_MAP.default;
-      if (cursorType) {
-        store.setState({ cursor: cursorType });
-      }
-
-      canvas.context.globalCompositeOperation =
-        toolHandler.currentTool === TOOL_ERASER_ID
-          ? 'destination-out'
-          : 'source-over';
+      onSetTool(toolTarget.id);
 
       // Si se clickeo la herramienta de limpiado
-      if (toolTarget.id === TOOL_TRASH_ID) {
-        target.checked = false;
-        canvas.clear();
-        canvas.history.reset();
-        store.setState({ hasHistory: Symbol(false) });
-      }
+      if (toolTarget.id === TOOL_TRASH_ID) onCleanScreen(target);
       toolHandler.resetToolState();
     }
   };
@@ -143,6 +178,13 @@ import { openColorDropper } from './lib/colorDropper';
   const onContextMenu = e => {
     e.preventDefault();
   };
+  const onTouchMove = e => {
+    // Block pinch-zooming
+    if (typeof e.scale === 'number' && e.scale !== 1) {
+      e.preventDefault();
+    }
+  };
+
   // --------------- STORE SUBSCRIPTIONS ---------------------
 
   store.subscribe('cursor', newValue => {
@@ -167,7 +209,7 @@ import { openColorDropper } from './lib/colorDropper';
     btnUndo.disabled = isDisableUndo;
   });
 
-  // --------------- EVENT MANAGER ---------------------
+  // --------------- EVENT MANAGER / STARTERS ---------------------
 
   const removeEventListeners = () => {
     onRemoveEventListeners.trigger();
@@ -182,14 +224,17 @@ import { openColorDropper } from './lib/colorDropper';
       addEventListener(document, EVENTS.CONTEXT_MENU, onContextMenu),
       addEventListener(canvasHtml, EVENTS.DRAG_START, () => false),
       addEventListener(window, EVENTS.LOAD, canvas.startCanvas),
-      addEventListener(window, EVENTS.RESIZE, debounce(canvas.resizeCanvas, 75)),
+      addEventListener(window, EVENTS.RESIZE, canvas.resizeCanvas),
       addEventListener(toolsContainer, EVENTS.CLICK, onChangeTool),
       addEventListener(canvasHtml, EVENTS.POINTER_DOWN, onPointerDown),
       addEventListener(canvasHtml, EVENTS.POINTER_MOVE, onPointerMove),
       addEventListener(canvasHtml, EVENTS.POINTER_UP, onPointerStop),
       addEventListener(canvasHtml, EVENTS.POINTER_LEAVE, onPointerStop),
       addEventListener(canvasHtml, EVENTS.POINTER_CANCEL, onPointerStop),
-      addEventListener(canvasHtml, EVENTS.POINTER_OUT, onPointerStop)
+      addEventListener(canvasHtml, EVENTS.POINTER_OUT, onPointerStop),
+      addEventListener(document, EVENTS.TOUCH_MOVE, onTouchMove, {
+        passive: false,
+      })
     );
   };
 
@@ -200,17 +245,10 @@ import { openColorDropper } from './lib/colorDropper';
     btnRedo.insertAdjacentHTML('beforeend', TOOL_ICON[redoId]);
     btnUndo.insertAdjacentHTML('beforeend', TOOL_ICON[undoId]);
 
+    // Negacion en los "disabled", porque cuando es "true" NO tiene que desabilitarse
     onRemoveHistoryListener.once(
-      addEventListener(btnRedo, EVENTS.CLICK, e => {
-        const btn = e.target;
-        btn.disabled = !canvas.canvasRedo();
-        btnUndo.disabled = !canvas.history.hasUndo();
-      }),
-      addEventListener(btnUndo, EVENTS.CLICK, e => {
-        const btn = e.target;
-        btn.disabled = !canvas.canvasUndo();
-        btnRedo.disabled = !canvas.history.hasRedo();
-      })
+      addEventListener(btnRedo, EVENTS.CLICK, onRedo),
+      addEventListener(btnUndo, EVENTS.CLICK, onUndo)
     );
   };
 
