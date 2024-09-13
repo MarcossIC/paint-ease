@@ -10,12 +10,12 @@ import {
   TOOL_ERASER_ID,
   CURSOR_TYPE,
 } from './constants';
-import { $, addEventListener } from './lib/utils';
+import { $, $FROM, addEventListener } from './lib/utils';
 import Canvas from './lib/canvas';
 import ToolsHandler from './lib/toolsHandler';
 import { store } from './lib/appState';
 import Emitter from './domain/emitter';
-import { KEYS } from './lib/keyUtilities';
+import { KEYS, isActionKey, KEYS_TO_TOOLS } from './lib/keyUtilities';
 import { openColorDropper } from './lib/colorDropper';
 
 (() => {
@@ -38,6 +38,19 @@ import { openColorDropper } from './lib/colorDropper';
   const onUndo = () => {
     btnUndo.disabled = !canvas.canvasUndo();
     btnRedo.disabled = !canvas.history.hasRedo();
+  };
+  const onSetTool = (toolUpdated, target) => {
+    let cursorType;
+    if (toolUpdated !== TOOL_TRASH_ID) {
+      if (target) target.click();
+      toolHandler.currentTool = toolUpdated;
+      cursorType = TOOL_CURSOR_MAP[toolUpdated] || TOOL_CURSOR_MAP.default;
+      canvas.context.globalCompositeOperation =
+        toolUpdated === TOOL_ERASER_ID ? 'destination-out' : 'source-over';
+    }
+    if (cursorType) {
+      store.setState({ cursor: cursorType });
+    }
   };
 
   // --------------- EVENTS ---------------------
@@ -65,7 +78,6 @@ import { openColorDropper } from './lib/colorDropper';
         },
       });
     }
-
     if (event.key === KEYS.SPACE) {
       canvas.isHoldingSpace = true;
       store.setState({ cursor: CURSOR_TYPE.GRAB });
@@ -77,7 +89,13 @@ import { openColorDropper } from './lib/colorDropper';
         onUndo();
       } else if (event.key === KEYS.Y) {
         onRedo();
+      } else if (isActionKey(event.key)) {
+        const toolId = KEYS_TO_TOOLS[event.key];
+        console.log({ toolId });
+        const btn = $FROM(toolsContainer, `#${toolId}`);
+        onSetTool(toolId, btn);
       }
+      event.preventDefault();
     }
 
     // Cuenta gotas
@@ -96,7 +114,7 @@ import { openColorDropper } from './lib/colorDropper';
     if (event.key === KEYS.SPACE) {
       const cursorType =
         TOOL_CURSOR_MAP[toolHandler.currentTool.id] || TOOL_CURSOR_MAP.default;
-      store.setState({ cursor: cursorType, zoom: 2 });
+      store.setState({ cursor: cursorType, zoom: 1 });
     }
   };
 
@@ -111,18 +129,7 @@ import { openColorDropper } from './lib/colorDropper';
         toolHandler.resetToolState();
         return;
       }
-
-      if (toolTarget.id !== TOOL_TRASH_ID) toolHandler.currentTool = toolTarget.id;
-      // Se cambia el cursor segun el tipo de herramienta
-      const cursorType = TOOL_CURSOR_MAP[toolTarget.id] || TOOL_CURSOR_MAP.default;
-      if (cursorType) {
-        store.setState({ cursor: cursorType });
-      }
-
-      canvas.context.globalCompositeOperation =
-        toolHandler.currentTool === TOOL_ERASER_ID
-          ? 'destination-out'
-          : 'source-over';
+      onSetTool(toolTarget.id);
 
       // Si se clickeo la herramienta de limpiado
       if (toolTarget.id === TOOL_TRASH_ID) {
