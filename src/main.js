@@ -10,7 +10,7 @@ import {
   TOOL_ERASER_ID,
   CURSOR_TYPE,
 } from './constants';
-import { $, addEventListener, debounce } from './lib/utils';
+import { $, addEventListener } from './lib/utils';
 import Canvas from './lib/canvas';
 import ToolsHandler from './lib/toolsHandler';
 import { store } from './lib/appState';
@@ -188,7 +188,7 @@ import { openColorDropper } from './lib/colorDropper';
       addEventListener(document, EVENTS.CONTEXT_MENU, onContextMenu),
       addEventListener(canvasHtml, EVENTS.DRAG_START, () => false),
       addEventListener(window, EVENTS.LOAD, canvas.startCanvas),
-      addEventListener(window, EVENTS.RESIZE, debounce(canvas.resizeCanvas, 75)),
+      addEventListener(window, EVENTS.RESIZE, canvas.resizeCanvas),
       addEventListener(toolsContainer, EVENTS.CLICK, onChangeTool),
       addEventListener(canvasHtml, EVENTS.POINTER_DOWN, onPointerDown),
       addEventListener(canvasHtml, EVENTS.POINTER_MOVE, onPointerMove),
@@ -209,6 +209,7 @@ import { openColorDropper } from './lib/colorDropper';
     btnRedo.insertAdjacentHTML('beforeend', TOOL_ICON[redoId]);
     btnUndo.insertAdjacentHTML('beforeend', TOOL_ICON[undoId]);
 
+    // Negacion en los "disabled", porque cuando es "true" NO tiene que desabilitarse
     onRemoveHistoryListener.once(
       addEventListener(btnRedo, EVENTS.CLICK, e => {
         const btn = e.target;
