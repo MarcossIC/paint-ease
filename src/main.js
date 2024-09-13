@@ -52,6 +52,12 @@ import { openColorDropper } from './lib/colorDropper';
       store.setState({ cursor: cursorType });
     }
   };
+  const onCleanScreen = target => {
+    if (target) target.checked = false;
+    canvas.clear();
+    canvas.history.reset();
+    store.setState({ hasHistory: Symbol(false) });
+  };
 
   // --------------- EVENTS ---------------------
 
@@ -85,17 +91,21 @@ import { openColorDropper } from './lib/colorDropper';
     }
 
     if (event[KEYS.CTRL_OR_CMD]) {
+      event.preventDefault();
       if (event.key === KEYS.Z) {
         onUndo();
       } else if (event.key === KEYS.Y) {
         onRedo();
       } else if (isActionKey(event.key)) {
         const toolId = KEYS_TO_TOOLS[event.key];
-        console.log({ toolId });
+
         const btn = $FROM(toolsContainer, `#${toolId}`);
+        if (toolId === TOOL_TRASH_ID) {
+          onCleanScreen();
+          return;
+        }
         onSetTool(toolId, btn);
       }
-      event.preventDefault();
     }
 
     // Cuenta gotas
@@ -132,12 +142,7 @@ import { openColorDropper } from './lib/colorDropper';
       onSetTool(toolTarget.id);
 
       // Si se clickeo la herramienta de limpiado
-      if (toolTarget.id === TOOL_TRASH_ID) {
-        target.checked = false;
-        canvas.clear();
-        canvas.history.reset();
-        store.setState({ hasHistory: Symbol(false) });
-      }
+      if (toolTarget.id === TOOL_TRASH_ID) onCleanScreen(target);
       toolHandler.resetToolState();
     }
   };
