@@ -1,5 +1,5 @@
-import { drawMethods, drawSmoothLine } from './draw';
-import { TOOL_BRUSH_ID, TOOL_ERASER_ID } from '../constants';
+import { drawMethods, drawCatmullRomSpline } from './draw';
+import { TOOL_BRUSH_ID, TOOL_ERASER_ID } from '../utils/constants';
 import { store } from './appState';
 
 export default class ToolsHandler {
@@ -60,7 +60,7 @@ export default class ToolsHandler {
   drawPoints(axis) {
     this._points.push(axis);
     if (this._points.length >= 3) {
-      drawSmoothLine(this._toolState.ctx, this._points);
+      drawCatmullRomSpline(this._toolState.ctx, this._points);
       // Mantén los últimos 3 puntos para la siguiente curva
       this._points = this._points.slice(-3);
     }

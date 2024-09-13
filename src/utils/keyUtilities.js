@@ -7,7 +7,7 @@ import {
   TOOL_TRIANGLE_ID,
   TOOL_ERASER_ID,
   TOOL_TRASH_ID,
-} from '../constants';
+} from './constants';
 
 export const CODES = {
   EQUAL: 'Equal',

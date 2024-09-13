@@ -1,7 +1,7 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable no-constructor-return */
-import { CURSOR_TYPE, SPECIAL_OBJ_PROPERTIES } from '../constants';
-import { isObject, getNestedValue, deepEqual } from './utils';
+import { CURSOR_TYPE, SPECIAL_OBJ_PROPERTIES } from '../utils/constants';
+import { isObject, getNestedValue, deepEqual } from '../utils/utils';
 
 class AppGlobalState {
   /** Estado global */

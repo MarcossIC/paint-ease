@@ -118,15 +118,16 @@ export const ROUGHNESS = {
 };
 
 export const CURSOR_TYPE = {
-  DEFAULT: 'default',
+  DEFAULT: 'var(--default-cursor)',
   TEXT: 'text',
-  CROSSHAIR: 'crosshair',
-  GRABBING: 'grabbing',
-  GRAB: 'grab',
-  POINTER: 'pointer',
+  CROSSHAIR: 'url("./cursors/crosshair.webp") 15 15, crosshair',
+  GRABBING: 'url("./cursors/grabbing.webp") 15 15, grabbing',
+  GRAB: 'url("./cursors/grab.webp") 15 15, grab',
+  POINTER: 'var(--pointer-cursor)',
   MOVE: 'move',
   AUTO: '',
-  ERASER: `url("./icons/cursorEraser.png") 10 10, auto`,
+  ERASER: `url("./cursors/eraser.webp") 15 15, auto`,
+  UNAVAILABLE: `var(--unavalaible-cursor)`,
 };
 
 export const TOOL_CURSOR_MAP = {

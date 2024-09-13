@@ -9,13 +9,13 @@ import {
   EVENTS,
   TOOL_ERASER_ID,
   CURSOR_TYPE,
-} from './constants';
-import { $, $FROM, addEventListener } from './lib/utils';
+} from './utils/constants';
+import { $, $FROM, addEventListener } from './utils/utils';
 import Canvas from './lib/canvas';
 import ToolsHandler from './lib/toolsHandler';
 import { store } from './lib/appState';
 import Emitter from './domain/emitter';
-import { KEYS, isActionKey, KEYS_TO_TOOLS } from './lib/keyUtilities';
+import { KEYS, isActionKey, KEYS_TO_TOOLS } from './utils/keyUtilities';
 import { openColorDropper } from './lib/colorDropper';
 
 (() => {
@@ -40,6 +40,7 @@ import { openColorDropper } from './lib/colorDropper';
     btnRedo.disabled = !canvas.history.hasRedo();
   };
   const onSetTool = (toolUpdated, target) => {
+    console.log({ toolUpdated });
     let cursorType;
     if (toolUpdated !== TOOL_TRASH_ID) {
       if (target) target.click();
@@ -48,6 +49,7 @@ import { openColorDropper } from './lib/colorDropper';
       canvas.context.globalCompositeOperation =
         toolUpdated === TOOL_ERASER_ID ? 'destination-out' : 'source-over';
     }
+    console.log({ cursorType });
     if (cursorType) {
       store.setState({ cursor: cursorType });
     }
@@ -55,8 +57,10 @@ import { openColorDropper } from './lib/colorDropper';
   const onCleanScreen = target => {
     if (target) target.checked = false;
     canvas.clear();
-    canvas.saveState();
-    store.setState({ hasHistory: Symbol(true) });
+    if (canvas.history.hasEntries()) {
+      canvas.saveState();
+      store.setState({ hasHistory: Symbol(true) });
+    }
   };
 
   // --------------- EVENTS ---------------------
@@ -139,6 +143,7 @@ import { openColorDropper } from './lib/colorDropper';
         toolHandler.resetToolState();
         return;
       }
+
       onSetTool(toolTarget.id);
 
       // Si se clickeo la herramienta de limpiado
