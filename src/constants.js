@@ -111,15 +111,6 @@ export const TEXT_ALIGN = {
   RIGHT: 'right',
 };
 
-export const ELEMENT_READY_TO_ERASE_OPACITY = 20;
-
-// Radius represented as 25% of element's largest side (width/height).
-// Used for LEGACY and PROPORTIONAL_RADIUS algorithms, or when the element is
-// below the cutoff size.
-export const DEFAULT_PROPORTIONAL_RADIUS = 0.25;
-// Fixed radius for the ADAPTIVE_RADIUS algorithm. In pixels.
-export const DEFAULT_ADAPTIVE_RADIUS = 32;
-
 export const ROUGHNESS = {
   architect: 0,
   artist: 1,

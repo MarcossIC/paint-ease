@@ -29,11 +29,21 @@ import { openColorDropper } from './lib/colorDropper';
   const onRemoveEventListeners = new Emitter();
   const onRemoveHistoryListener = new Emitter();
 
+  // --------------- ACTIONS ---------------------
+  const onRedo = () => {
+    btnRedo.disabled = !canvas.canvasRedo();
+    btnUndo.disabled = !canvas.history.hasUndo();
+  };
+
+  const onUndo = () => {
+    btnUndo.disabled = !canvas.canvasUndo();
+    btnRedo.disabled = !canvas.history.hasRedo();
+  };
+
   // --------------- EVENTS ---------------------
 
   const onKeydown = event => {
     // Normalizar las teclas cuando se presiona CapsLock / Mayus
-
     if (
       'Proxy' in window &&
       ((!event.shiftKey && /^[A-Z]$/.test(event.key)) ||
@@ -60,6 +70,14 @@ import { openColorDropper } from './lib/colorDropper';
       canvas.isHoldingSpace = true;
       store.setState({ cursor: CURSOR_TYPE.GRAB });
       event.preventDefault();
+    }
+
+    if (event[KEYS.CTRL_OR_CMD]) {
+      if (event.key === KEYS.Z) {
+        onUndo();
+      } else if (event.key === KEYS.Y) {
+        onRedo();
+      }
     }
 
     // Cuenta gotas
@@ -149,6 +167,7 @@ import { openColorDropper } from './lib/colorDropper';
       e.preventDefault();
     }
   };
+
   // --------------- STORE SUBSCRIPTIONS ---------------------
 
   store.subscribe('cursor', newValue => {
@@ -173,7 +192,7 @@ import { openColorDropper } from './lib/colorDropper';
     btnUndo.disabled = isDisableUndo;
   });
 
-  // --------------- EVENT MANAGER ---------------------
+  // --------------- EVENT MANAGER / STARTERS ---------------------
 
   const removeEventListeners = () => {
     onRemoveEventListeners.trigger();
@@ -211,16 +230,8 @@ import { openColorDropper } from './lib/colorDropper';
 
     // Negacion en los "disabled", porque cuando es "true" NO tiene que desabilitarse
     onRemoveHistoryListener.once(
-      addEventListener(btnRedo, EVENTS.CLICK, e => {
-        const btn = e.target;
-        btn.disabled = !canvas.canvasRedo();
-        btnUndo.disabled = !canvas.history.hasUndo();
-      }),
-      addEventListener(btnUndo, EVENTS.CLICK, e => {
-        const btn = e.target;
-        btn.disabled = !canvas.canvasUndo();
-        btnRedo.disabled = !canvas.history.hasRedo();
-      })
+      addEventListener(btnRedo, EVENTS.CLICK, onRedo),
+      addEventListener(btnUndo, EVENTS.CLICK, onUndo)
     );
   };
 
