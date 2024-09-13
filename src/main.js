@@ -55,8 +55,8 @@ import { openColorDropper } from './lib/colorDropper';
   const onCleanScreen = target => {
     if (target) target.checked = false;
     canvas.clear();
-    canvas.history.reset();
-    store.setState({ hasHistory: Symbol(false) });
+    canvas.saveState();
+    store.setState({ hasHistory: Symbol(true) });
   };
 
   // --------------- EVENTS ---------------------
