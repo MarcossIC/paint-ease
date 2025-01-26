@@ -315,10 +315,6 @@ import { openColorDropper } from './core/dropper';
   });
 
   store.subscribe('zoom', newValue => {
-    console.log({ zoom: newValue });
-    // canvas.canvas.style.transform = `scale(${newValue})`;
-    // canvas.canvas.style.transformOrigin = 'top left';
-    // canvas.resizeCanvas();
     canvas.setCanvasScale(newValue);
   });
   store.subscribe('width', newValue => {
