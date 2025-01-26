@@ -107,6 +107,9 @@ body {
   position: absolute;
   z-index: 2;
   cursor: var(--current-cursor);
+  transform-origin: 0 0;
+  top: 0;
+  left: 0;
 }
 
 .control-button {

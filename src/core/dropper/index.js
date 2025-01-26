@@ -1,4 +1,4 @@
-import { $ } from '../utils/utils';
+import { $ } from '../../utils/dom';
 
 const dropperPreview = $('color-dropper');
 

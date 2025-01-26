@@ -1,5 +1,5 @@
+import { isDarwin } from '../core/device';
 import {
-  isDarwin,
   TOOL_CLICK_ID,
   TOOL_BRUSH_ID,
   TOOL_RECTANGLE_ID,
@@ -7,7 +7,7 @@ import {
   TOOL_TRIANGLE_ID,
   TOOL_ERASER_ID,
   TOOL_TRASH_ID,
-} from './constants';
+} from './tools';
 
 export const CODES = {
   EQUAL: 'Equal',

@@ -2,11 +2,11 @@ import {
   getCompressed,
   getDecompressed,
   validateContext as isValidContext,
-} from '../utils/utils';
+} from '../../utils/canvas';
 
 const MAX_HISTORY_INDEX = 12;
 
-export default class CanvasHistory {
+export class HistoryHandler {
   _history;
 
   _historyIndex;

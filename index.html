@@ -250,7 +250,15 @@
             <section
               class="grid grid-flow-row grid-cols-[auto] grid-auto-rows-min fixed-pointer-container gap-8">
               <h2 class="visually-hidden">Board actions</h2>
-              <div class="absolute bottom-0 right-[2%]">
+              <div class="absolute bottom-0 right-28">
+                <div
+                  id="zoom-ctrl"
+                  class="w-auto flex bg-gray-200 rounded-xl custom-cursor-default">
+                  <button id="btn-zoomIn" class="text-black btn p-4">In</button>
+                  <button id="btn-zoomOut" class="text-black btn p-4">Out</button>
+                </div>
+              </div>
+              <div class="absolute bottom-0 right-4">
                 <div
                   id="history-controls"
                   class="w-auto flex bg-gray-200 rounded-xl custom-cursor-default"

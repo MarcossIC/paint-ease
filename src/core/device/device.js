@@ -1,5 +1,5 @@
 /*  A possible implementation is proposed to handle different devices. Not yet functional */
-export default class DeviceContext {
+export class DeviceContext {
   /** @type {{isMobile: boolean; isLandscape: boolean;}} */
   _viewport;
 

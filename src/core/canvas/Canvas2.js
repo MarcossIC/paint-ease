@@ -1,8 +1,11 @@
+/* eslint-disable import/prefer-default-export */
 import { RoughCanvas } from 'roughjs/bin/canvas';
-import DeviceContext from '../domain/device';
-import CanvasHistory from './history';
+import { DeviceContext } from '../device';
+import { HistoryHandler } from '../history';
+import { store } from '../../state';
+import { getNormalizedCanvasDimensions } from '../../utils/canvas';
 
-export default class Canvas {
+export class Canvas {
   /** @type {HTMLCanvasElement} - Canvas HTML donde se dibuja. */
   _canvas;
 
@@ -12,7 +15,7 @@ export default class Canvas {
   /** @type {ImageData} - Snapshot del estado actual del lienzo. */
   _snapshot;
 
-  /** @type {CanvasHistory} - Manaja el historial del canvas. */
+  /** @type {HistoryHandler} - Manaja el historial del canvas. */
   _history;
 
   /** @type {DeviceContext} */
@@ -34,32 +37,46 @@ export default class Canvas {
     this.rc = new RoughCanvas(canvasHtml);
 
     this._context2D = this._canvas.getContext('2d', { willReadFrequently: true });
-    this._history = new CanvasHistory();
+    this._history = new HistoryHandler();
     this._snapshot = null;
     this._deviceContext = new DeviceContext();
     this._isHolding = false;
   }
 
-  startCanvas = () => {
-    this.setCanvasSize();
+  updateWidth(updated) {
+    this._canvas.width = updated;
+  }
 
+  updateHeight(updated) {
+    this._canvas.height = updated;
+  }
+
+  startCanvas = () => {
+    const { zoom } = store.getState();
+    const useScale = zoom !== 1 ? zoom : window.devicePixelRatio || 1;
+    this.setCanvasScale(useScale);
+    const [normalizedWidth, normalizedHeight] = getNormalizedCanvasDimensions(
+      this._canvas,
+      useScale
+    );
+    this._context2D.clearRect(0, 0, normalizedWidth, normalizedHeight);
+    this._context2D.save();
     this._context2D.fillStyle = '#fafafa';
     this._context2D.strokeStyle = '#fafafa';
-    this._context2D.fillRect(0, 0, this._canvas.width, this._canvas.height);
-    this.setSnapshot();
+    this._context2D.fillRect(0, 0, normalizedWidth, normalizedHeight);
+    this._context2D.restore();
   };
 
-  setCanvasSize() {
+  setCanvasScale(scale) {
     this._context2D.setTransform(1, 0, 0, 1, 0, 0);
-    const dpr = window.devicePixelRatio || 1;
-    this._canvas.width = this._canvas.offsetWidth * dpr;
-    this._canvas.height = this._canvas.offsetHeight * dpr;
-    this._context2D.scale(dpr, dpr);
+    this._context2D.scale(scale, scale);
   }
 
   resizeCanvas = () => {
     // Redimensionar el lienzo
-    this.setCanvasSize();
+    const { zoom } = store.getState();
+    const useScale = zoom !== 1 ? zoom : window.devicePixelRatio || 1;
+    this.setCanvasScale(useScale);
 
     // Redibujar si hay entradas en el historial
     if (this._history.hasEntries()) {
@@ -148,7 +165,14 @@ export default class Canvas {
 
   /* Limpiar Lienzo para dejarlo en blanco */
   clear() {
-    this._context2D.clearRect(0, 0, this._canvas.width, this._canvas.height);
+    const { zoom } = store.getState();
+    const useScale = zoom !== 1 ? zoom : window.devicePixelRatio || 1;
+    const [normalizedWidth, normalizedHeight] = getNormalizedCanvasDimensions(
+      this._canvas,
+      useScale
+    );
+    this._context2D.clearRect(0, 0, normalizedWidth, normalizedHeight);
+    this._context2D.save();
   }
 
   get context() {

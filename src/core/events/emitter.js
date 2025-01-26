@@ -13,7 +13,7 @@
 /**
  * @template {any[]} T
  */
-class Emitter {
+export class Emitter {
   /**
    * @type {Subscriber<T>[]}
    */
@@ -74,5 +74,3 @@ class Emitter {
     this.subscribers = [];
   }
 }
-
-export default Emitter;

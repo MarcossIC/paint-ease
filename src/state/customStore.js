@@ -1,9 +1,9 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable no-constructor-return */
-import { CURSOR_TYPE, SPECIAL_OBJ_PROPERTIES } from '../utils/constants';
-import { isObject, getNestedValue, deepEqual } from '../utils/utils';
+import { SPECIAL_OBJ_PROPERTIES } from '../constants/system';
+import { isObject, getNestedValue, deepEqual } from '../utils/object';
 
-class AppGlobalState {
+export class AppGlobalState {
   /** Estado global */
   state;
 
@@ -152,18 +152,3 @@ class AppGlobalState {
     return this.state;
   }
 }
-
-const store = new AppGlobalState({
-  cursor: CURSOR_TYPE.DEFAULT,
-  appOffsetX: 0,
-  appOffsetY: 0,
-  zoom: 1,
-  zenEnabled: false,
-  theme: 'light',
-  isHoldingSpace: false,
-  isDrawing: false,
-  hasHistory: Symbol(false),
-  lastViewportView: [0, 0],
-});
-
-export { store };
