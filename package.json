@@ -1,55 +1,24 @@
 {
   "name": "paint-ease",
   "description": "Paint ease vanilla java script project.",
-  "version": "0.0.0",
+  "version": "0.0.3",
   "type": "module",
   "private": true,
   "homepage": "https://marcossic.github.io/paint-ease",
   "scripts": {
     "dev": "vite",
-    "lint": "eslint . --fix",
-    "commitlint:last": "npx commitlint --from HEAD~1 --to HEAD --verbose || $1",
-    "format": "prettier --check --ignore-path .prettierignore .",
-    "format:fix": "prettier --write --ignore-path .prettierignore .",
     "build": "vite build",
-    "preview": "vite preview",
-    "prepare": "node setup-husky.js",
-    "push": "sh push.sh",
-    "postinstall": "node setup-husky.js"
-  },
-  "lint-staged": {
-    "**/*.{js,json}": [
-      "prettier --write --ignore-path .prettierignore .",
-      "eslint . --fix"
-    ],
-    "./*.{js,json,mjs}": [
-      "prettier --write --ignore-path .prettierignore .",
-      "eslint . --fix"
-    ]
+    "preview": "vite preview"
   },
   "dependencies": {
     "pako": "2.1.0",
     "roughjs": "4.6.6"
   },
   "devDependencies": {
-    "@commitlint/cli": "19.4.0",
-    "@commitlint/config-conventional": "19.2.2",
-    "@eslint/compat": "1.1.1",
-    "@eslint/eslintrc": "3.1.0",
-    "@eslint/js": "9.9.0",
-    "autoprefixer": "10.4.20",
-    "cssnano": "7.0.5",
-    "eslint": "8.57.0",
-    "eslint-config-airbnb-base": "15.0.0",
-    "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-prettier": "5.2.1",
-    "globals": "15.9.0",
-    "husky": "9.1.4",
-    "lint-staged": "15.2.9",
-    "postcss": "8.4.41",
-    "postcss-nesting": "13.0.0",
     "prettier": "3.3.3",
-    "tailwindcss": "3.4.10",
+    "tailwindcss": "4.1.11",
+    "postcss": "8.5.6",
+    "@tailwindcss/postcss": "4.1.11",
     "vite": "5.4.0"
   }
 }

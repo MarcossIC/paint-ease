@@ -27,6 +27,32 @@ export const getCompressed = img => {
   return { data: compressed, w: img.width, h: img.height };
 };
 
+/** @param {Array} worldElements - Array of world elements to compress */
+export const getWorldElementsCompressed = worldElements => {
+  // Convert to JSON string and then to Uint8Array for compression
+  const jsonString = JSON.stringify(worldElements);
+  const uint8Array = new TextEncoder().encode(jsonString);
+  const compressed = deflate(uint8Array);
+  return { data: compressed, elementCount: worldElements.length };
+};
+
+/** @param {Object} compressedData - Compressed world elements data */
+export const getWorldElementsDecompressed = ({ data, elementCount }) => {
+  const decompressed = inflate(data);
+  const jsonString = new TextDecoder().decode(decompressed);
+  const worldElements = JSON.parse(jsonString);
+  
+  // Validate that we got the expected number of elements
+  if (worldElements.length !== elementCount) {
+    console.warn('Decompressed element count mismatch:', {
+      expected: elementCount,
+      actual: worldElements.length
+    });
+  }
+  
+  return worldElements;
+};
+
 export const validateContext = ctx => {
   if (!ctx || !(ctx instanceof CanvasRenderingContext2D)) {
     throw new Error('Invalid canvas rendering 2D context');

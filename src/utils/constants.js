@@ -120,13 +120,13 @@ export const ROUGHNESS = {
 export const CURSOR_TYPE = {
   DEFAULT: 'var(--default-cursor)',
   TEXT: 'text',
-  CROSSHAIR: 'url("./cursors/crosshair.webp") 15 15, crosshair',
-  GRABBING: 'url("./cursors/grabbing.webp") 15 15, grabbing',
-  GRAB: 'url("./cursors/grab.webp") 15 15, grab',
+  CROSSHAIR: `url("${import.meta.env.BASE_URL || './'}cursors/crosshair.webp") 15 15, crosshair`,
+  GRABBING: `url("${import.meta.env.BASE_URL || './'}cursors/grabbing.webp") 15 15, grabbing`,
+  GRAB: `url("${import.meta.env.BASE_URL || './'}cursors/grab.webp") 15 15, grab`,
   POINTER: 'var(--pointer-cursor)',
   MOVE: 'move',
   AUTO: '',
-  ERASER: `url("./cursors/eraser.webp") 15 15, auto`,
+  ERASER: `url("${import.meta.env.BASE_URL || './'}cursors/eraser.webp") 15 15, auto`,
   UNAVAILABLE: `var(--unavalaible-cursor)`,
 };
 

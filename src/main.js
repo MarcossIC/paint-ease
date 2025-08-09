@@ -8,11 +8,12 @@ import {
   TOOL_CURSOR_MAP,
   EVENTS,
   TOOL_ERASER_ID,
+  TOOL_BRUSH_ID,
   CURSOR_TYPE,
 } from './utils/constants';
 import { $, $FROM, addEventListener } from './utils/utils';
-import Canvas from './lib/canvas';
 import ToolsHandler from './lib/toolsHandler';
+import { InfiniteCanvas } from './lib/infiniteCanvas';
 import { store } from './lib/appState';
 import Emitter from './domain/emitter';
 import { KEYS, isActionKey, KEYS_TO_TOOLS } from './utils/keyUtilities';
@@ -24,41 +25,47 @@ import { openColorDropper } from './lib/colorDropper';
   const btnUndo = $('#btn-undo');
   const btnRedo = $('#btn-redo');
   const toolsContainer = $('#tool-controls');
-  const canvas = new Canvas(canvasHtml);
-  const toolHandler = new ToolsHandler(canvas, TOOL_CLICK_ID);
+  // Status bar elements
+  const statusPos = $('#status-pos');
+  const statusTool = $('#status-tool');
+  const statusElements = $('#status-elements');
+  const statusZoom = $('#status-zoom');
+  const infiniteCanvas = new InfiniteCanvas(canvasHtml);
+  const toolHandler = new ToolsHandler(null, infiniteCanvas, TOOL_CLICK_ID);
   const onRemoveEventListeners = new Emitter();
   const onRemoveHistoryListener = new Emitter();
 
   // --------------- ACTIONS ---------------------
   const onRedo = () => {
-    btnRedo.disabled = !canvas.canvasRedo();
-    btnUndo.disabled = !canvas.history.hasUndo();
+    const success = infiniteCanvas.redo();
+    
+    btnRedo.disabled = !infiniteCanvas.canRedo();
+    btnUndo.disabled = !infiniteCanvas.canUndo();
   };
 
   const onUndo = () => {
-    btnUndo.disabled = !canvas.canvasUndo();
-    btnRedo.disabled = !canvas.history.hasRedo();
+    const success = infiniteCanvas.undo();
+    
+    btnUndo.disabled = !infiniteCanvas.canUndo();
+    btnRedo.disabled = !infiniteCanvas.canRedo();
   };
   const onSetTool = (toolUpdated, target) => {
-    console.log({ toolUpdated });
     let cursorType;
     if (toolUpdated !== TOOL_TRASH_ID) {
       if (target) target.click();
       toolHandler.currentTool = toolUpdated;
       cursorType = TOOL_CURSOR_MAP[toolUpdated] || TOOL_CURSOR_MAP.default;
-      canvas.context.globalCompositeOperation =
-        toolUpdated === TOOL_ERASER_ID ? 'destination-out' : 'source-over';
+      // Note: InfiniteCanvas handles eraser tool internally, no globalCompositeOperation needed
     }
-    console.log({ cursorType });
     if (cursorType) {
       store.setState({ cursor: cursorType });
     }
   };
   const onCleanScreen = target => {
     if (target) target.checked = false;
-    canvas.clear();
-    if (canvas.history.hasEntries()) {
-      canvas.saveState();
+    infiniteCanvas.clearAll();
+    // InfiniteCanvas handles its own history automatically
+    if (infiniteCanvas.hasHistory()) {
       store.setState({ hasHistory: Symbol(true) });
     }
   };
@@ -69,8 +76,8 @@ import { openColorDropper } from './lib/colorDropper';
     // Normalizar las teclas cuando se presiona CapsLock / Mayus
     if (
       'Proxy' in window &&
-      ((!event.shiftKey && /^[A-Z]$/.test(event.key)) ||
-        (event.shiftKey && /^[a-z]$/.test(event.key)))
+      ((!event[KEYS.SHIFT] && /^[A-Z]$/.test(event.key)) ||
+        (event[KEYS.SHIFT] && /^[a-z]$/.test(event.key)))
     ) {
       // Si el objeto Proxy es soportado y se esta presionando el capslock y otra tecla
       // Redefinimos el evento
@@ -81,16 +88,47 @@ import { openColorDropper } from './lib/colorDropper';
             return value.bind(ev);
           }
           if (prop === 'key') {
-            return event.shiftKey ? ev.key.toUpperCase() : ev.key.toLowerCase();
+            return event[KEYS.SHIFT] ? ev.key.toUpperCase() : ev.key.toLowerCase();
           }
 
           return value;
         },
       });
     }
+
+    // Check for orthogonal line mode (Ctrl/Cmd + Alt + Shift) or straight line mode (Ctrl/Cmd + Alt)
+    if (event[KEYS.CTRL_OR_CMD] && event[KEYS.ALT]) {
+      const state = store.getState();
+      
+      if (event[KEYS.SHIFT]) {
+        // Orthogonal mode (90° angles + chaining)
+        if (!state.isOrthogonalMode) {
+          store.setState({ 
+            isOrthogonalMode: true,
+            isStraightLineMode: false // Disable regular straight line mode
+          });
+        }
+      } else {
+        // Regular straight line mode (360°)
+        if (!state.isStraightLineMode && !state.isOrthogonalMode) {
+          store.setState({ 
+            isStraightLineMode: true,
+            isOrthogonalMode: false,
+            cursor: CURSOR_TYPE.CROSSHAIR
+          });
+        }
+      }
+    }
+
     if (event.key === KEYS.SPACE) {
-      canvas.isHoldingSpace = true;
-      store.setState({ cursor: CURSOR_TYPE.GRAB });
+      const state = store.getState();
+      // Don't activate temporary panning if already drawing or panning
+      if (!state.isDrawing && !state.isPanning) {
+        store.setState({ 
+          isTemporaryPanning: true,
+          cursor: CURSOR_TYPE.GRAB 
+        });
+      }
       event.preventDefault();
     }
 
@@ -100,6 +138,16 @@ import { openColorDropper } from './lib/colorDropper';
         onUndo();
       } else if (event.key === KEYS.Y) {
         onRedo();
+      } else if (event.key === 'Escape') {
+        // Cancel any temporary states
+        const state = store.getState();
+        if (state.isTemporaryPanning) {
+          store.setState({ 
+            isTemporaryPanning: false,
+            isPanning: false,
+            cursor: TOOL_CURSOR_MAP[toolHandler.currentTool] || TOOL_CURSOR_MAP.default
+          });
+        }
       } else if (isActionKey(event.key)) {
         const toolId = KEYS_TO_TOOLS[event.key];
 
@@ -114,21 +162,56 @@ import { openColorDropper } from './lib/colorDropper';
 
     // Cuenta gotas
     const lowerCased = event.key.toLocaleLowerCase();
-    const isPickingStroke = lowerCased === KEYS.S && event.shiftKey;
+    const isPickingStroke = lowerCased === KEYS.S && event[KEYS.SHIFT];
 
     if (isPickingStroke) {
       openColorDropper({
         type: 'stroke',
-        canvas,
+        canvas: infiniteCanvas,
       });
     }
   };
 
   const onKeyUp = event => {
+    // Handle key releases for line modes
+    if (event[KEYS.SHIFT]) {
+      // When Shift is released, switch from orthogonal to regular straight line mode
+      const state = store.getState();
+      if (state.isOrthogonalMode && event[KEYS.CTRL_OR_CMD] && event[KEYS.ALT]) {
+        store.setState({ 
+          isOrthogonalMode: false,
+          isStraightLineMode: true,
+          chainStartPoint: null
+        });
+      }
+    } else if (event[KEYS.CTRL_OR_CMD] || event[KEYS.ALT]) {
+      // When Ctrl/Cmd or Alt is released, disable both modes
+      const state = store.getState();
+      if (state.isStraightLineMode || state.isOrthogonalMode) {
+        // Clear preview line before disabling modes
+        infiniteCanvas.clearPreviewLine();
+        const cursorType =
+        TOOL_CURSOR_MAP[toolHandler.currentTool] || TOOL_CURSOR_MAP.default;
+        store.setState({ 
+          isStraightLineMode: false,
+          isOrthogonalMode: false,
+          chainStartPoint: null,
+          cursor: cursorType
+        });
+      }
+    }
+
     if (event.key === KEYS.SPACE) {
-      const cursorType =
-        TOOL_CURSOR_MAP[toolHandler.currentTool.id] || TOOL_CURSOR_MAP.default;
-      store.setState({ cursor: cursorType, zoom: 1 });
+      const state = store.getState();
+      if (state.isTemporaryPanning) {
+        // Return to original tool cursor
+        const cursorType =
+          TOOL_CURSOR_MAP[toolHandler.currentTool] || TOOL_CURSOR_MAP.default;
+        store.setState({ 
+          isTemporaryPanning: false,
+          cursor: cursorType 
+        });
+      }
     }
   };
 
@@ -139,39 +222,119 @@ import { openColorDropper } from './lib/colorDropper';
       const selectedToolId = toolHandler.currentTool;
       const isCurrentSelected = selectedToolId === toolTarget.id;
 
-      if (!toolTarget || isCurrentSelected) {
-        toolHandler.resetToolState();
+      // Reset any ongoing drawing/panning states
+      store.setState({ 
+        isDrawing: false, 
+        isPanning: false,
+        isTemporaryPanning: false // Also reset temporary panning
+      });
+      
+      // Clear preview line when changing tools
+      infiniteCanvas.clearPreviewLine();
+      
+      // Reset tool state when changing tools
+      toolHandler.resetToolState();
+
+      if (!toolTarget) return;
+
+      // If clicking the same tool, just reset state
+      if (isCurrentSelected) {
         return;
       }
 
+      // Set the new tool
       onSetTool(toolTarget.id);
+      // Update status tool label
+      if (statusTool) {
+        const map = {
+          'btn-click': 'neutral',
+          'btn-brush': 'brush',
+          'btn-eraser': 'eraser',
+          'btn-rectangle': 'rectangle',
+          'btn-triangle': 'triangle',
+          'btn-circle': 'circle',
+        };
+        statusTool.textContent = `Herramienta: ${map[toolTarget.id] || 'neutral'}`;
+      }
 
       // Si se clickeo la herramienta de limpiado
       if (toolTarget.id === TOOL_TRASH_ID) onCleanScreen(target);
-      toolHandler.resetToolState();
     }
   };
 
   const onPointerDown = e => {
+    // Only handle canvas clicks, not toolbar clicks
+    if (!e.target.closest('#canvas')) {
+      return;
+    }
+    
     e.preventDefault();
-    if (toolHandler.currentTool !== TOOL_CLICK_ID && e.isPrimary) {
-      store.setState({ isDrawing: true });
-      toolHandler.preparingTheBrush(e);
+    if (e.isPrimary) {
+      const state = store.getState();
+      
+      // Check for temporary panning with Space key
+      if (state.isTemporaryPanning) {
+        store.setState({ isPanning: true, cursor: CURSOR_TYPE.GRABBING });
+        // Use infinite canvas panning directly
+        infiniteCanvas.startPan(e.pageX, e.pageY);
+      } else if (toolHandler.currentTool === TOOL_CLICK_ID) {
+        store.setState({ isPanning: true, cursor: CURSOR_TYPE.GRABBING });
+        toolHandler.preparingTheBrush(e);
+      } else {
+        store.setState({ isDrawing: true });
+        toolHandler.preparingTheBrush(e);
+      }
     }
   };
   const onPointerMove = e => {
-    const { isDrawing } = store.getState();
-    if (isDrawing) {
-      toolHandler.useTool(e);
+    const { isDrawing, isPanning, isTemporaryPanning, isOrthogonalMode, chainStartPoint } = store.getState();
+    
+    if ((isPanning || isDrawing) && e.target.closest('#canvas')) {
+      // Handle temporary panning directly with infinite canvas
+      if (isTemporaryPanning && isPanning) {
+        infiniteCanvas.updatePan(e.pageX, e.pageY);
+      } else {
+        toolHandler.useTool(e);
+      }
+    } else if (isOrthogonalMode && chainStartPoint && toolHandler.currentTool === TOOL_BRUSH_ID && e.target.closest('#canvas')) {
+      // Show preview for next orthogonal line
+      const worldPos = toolHandler.getMousePosition(e);
+      infiniteCanvas.updatePreviewLine(worldPos.x, worldPos.y);
+    }
+
+    // Update cursor position relative to canvas
+    if (e.target.closest('#canvas')) {
+      const rect = canvasHtml.getBoundingClientRect();
+      const x = Math.round(e.clientX - rect.left);
+      const y = Math.round(e.clientY - rect.top);
+      if (statusPos) statusPos.textContent = `X: ${x} Y: ${y}`;
     }
   };
 
   const onPointerStop = e => {
-    e.preventDefault();
-    const { isDrawing } = store.getState();
-    if (isDrawing) {
-      canvas.saveState();
-      store.setState({ isDrawing: false, hasHistory: Symbol(true) });
+    const { isDrawing, isPanning, isTemporaryPanning } = store.getState();
+    
+    if (isPanning || isDrawing) {
+      e.preventDefault();
+      
+      if (isPanning) {
+        // Handle temporary panning
+        if (isTemporaryPanning) {
+          infiniteCanvas.stopPan();
+          // Return to grab cursor (still holding Space)
+          store.setState({ isPanning: false, cursor: CURSOR_TYPE.GRAB });
+        } else {
+          // Normal panning with click tool
+          toolHandler.finishDrawing();
+          const cursorType = TOOL_CURSOR_MAP[toolHandler.currentTool] || TOOL_CURSOR_MAP.default;
+          store.setState({ isPanning: false, cursor: cursorType });
+        }
+      } else if (isDrawing) {
+        // Normal drawing
+        toolHandler.finishDrawing();
+        // All drawing (strokes and shapes) is now handled automatically in infiniteCanvas
+        store.setState({ isDrawing: false, hasHistory: Symbol(true) });
+      }
     }
   };
 
@@ -182,6 +345,14 @@ import { openColorDropper } from './lib/colorDropper';
     // Block pinch-zooming
     if (typeof e.scale === 'number' && e.scale !== 1) {
       e.preventDefault();
+    }
+  };
+
+  const onWheel = e => {
+    // Handle zoom with Ctrl/Cmd + wheel
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      toolHandler.handleZoom(e, e.deltaY);
     }
   };
 
@@ -201,12 +372,66 @@ import { openColorDropper } from './lib/colorDropper';
     let isDisableUndo = true;
     const isActive = newValue.description === 'true';
     if (isActive) {
-      // Use denial to disabled
-      isDisableRedo = !canvas.history.hasRedo();
-      isDisableUndo = !canvas.history.hasUndo();
+      // Only check infinite canvas history
+      isDisableRedo = !infiniteCanvas.canRedo();
+      isDisableUndo = !infiniteCanvas.canUndo();
     }
     btnRedo.disabled = isDisableRedo;
     btnUndo.disabled = isDisableUndo;
+  });
+
+  // Update UI and canvas camera when camera properties change in store
+  const syncZoom = (newZoom) => {
+    const cam = infiniteCanvas.camera;
+    infiniteCanvas.camera = { ...cam, zoom: newZoom };
+    if (statusZoom) {
+      const pct = Math.round((newZoom || 1) * 100);
+      statusZoom.textContent = `Zoom: ${pct}%`;
+    }
+  };
+
+  store.subscribe('camera.zoom', syncZoom);
+
+
+  // Sync worldElements from store to infinite canvas
+  store.subscribe('worldElements', (newWorldElements) => {
+    if (Array.isArray(newWorldElements)) {
+      // Only sync if length is different (simple check to avoid most loops)
+      const currentElements = infiniteCanvas.worldElements;
+      if (currentElements.length !== newWorldElements.length) {
+        infiniteCanvas.worldElements = [...newWorldElements];
+        infiniteCanvas.markDirty();
+      }
+      // Update status bar count
+      if (statusElements) {
+        statusElements.textContent = `${newWorldElements.length} elementos`;
+      }
+    }
+  });
+
+  // Visual feedback for straight line mode
+  // store.subscribe('isStraightLineMode', (isStraightLineMode) => {
+  //   const state = store.getState();
+  //   if (isStraightLineMode && toolHandler.currentTool === TOOL_BRUSH_ID && !state.isOrthogonalMode) {
+  //     // Add visual indicator or change cursor to show straight line mode is active
+  //     document.body.style.setProperty('--current-cursor', 'crosshair');
+  //   } else if (!state.isOrthogonalMode) {
+  //     // Reset to normal cursor - directly set CSS to avoid recursive state updates
+  //     const cursorType = TOOL_CURSOR_MAP[toolHandler.currentTool] || TOOL_CURSOR_MAP.default;
+  //     document.body.style.setProperty('--current-cursor', cursorType);
+  //   }
+  // });
+
+  // Visual feedback for orthogonal line mode
+  store.subscribe('isOrthogonalMode', (isOrthogonalMode) => {
+    if (isOrthogonalMode && toolHandler.currentTool === TOOL_BRUSH_ID) {
+      // Add visual indicator for orthogonal mode (different cursor)
+      document.body.style.setProperty('--current-cursor', 'cell');
+    } else {
+      // Reset to normal cursor - directly set CSS to avoid recursive state updates
+      const cursorType = TOOL_CURSOR_MAP[toolHandler.currentTool] || TOOL_CURSOR_MAP.default;
+      document.body.style.setProperty('--current-cursor', cursorType);
+    }
   });
 
   // --------------- EVENT MANAGER / STARTERS ---------------------
@@ -223,8 +448,13 @@ import { openColorDropper } from './lib/colorDropper';
       addEventListener(document, EVENTS.KEYUP, onKeyUp),
       addEventListener(document, EVENTS.CONTEXT_MENU, onContextMenu),
       addEventListener(canvasHtml, EVENTS.DRAG_START, () => false),
-      addEventListener(window, EVENTS.LOAD, canvas.startCanvas),
-      addEventListener(window, EVENTS.RESIZE, canvas.resizeCanvas),
+      addEventListener(canvasHtml, 'wheel', onWheel, { passive: false }),
+      addEventListener(window, EVENTS.LOAD, () => {
+        infiniteCanvas.init();
+      }),
+      addEventListener(window, EVENTS.RESIZE, () => {
+        infiniteCanvas.resize();
+      }),
       addEventListener(toolsContainer, EVENTS.CLICK, onChangeTool),
       addEventListener(canvasHtml, EVENTS.POINTER_DOWN, onPointerDown),
       addEventListener(canvasHtml, EVENTS.POINTER_MOVE, onPointerMove),
@@ -253,8 +483,28 @@ import { openColorDropper } from './lib/colorDropper';
   };
 
   const init = () => {
+    // Ensure cursor assets use correct base path (works on GitHub Pages)
+    const base = import.meta.env.BASE_URL || './';
+    const root = document.documentElement;
+    root.style.setProperty(
+      '--default-cursor',
+      `url('${base}cursors/default.png') 3 3, default`
+    );
+    root.style.setProperty(
+      '--pointer-cursor',
+      `url('${base}cursors/pointer.webp') 7 5, pointer`
+    );
+    root.style.setProperty(
+      '--unavalaible-cursor',
+      `url('${base}cursors/unavailable.webp') 3 3, not-allowed`
+    );
     addEventListeners();
     initHistoryTools();
+    
+    // Initialize status bar with default values
+    if (statusZoom) statusZoom.textContent = 'Zoom: 100%';
+    if (statusElements) statusElements.textContent = '0 elementos';
+    if (statusTool) statusTool.textContent = 'Herramienta: neutral';
   };
 
   init();

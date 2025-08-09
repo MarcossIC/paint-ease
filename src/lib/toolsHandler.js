@@ -1,21 +1,20 @@
 import { drawMethods, drawCatmullRomSpline } from './draw';
-import { TOOL_BRUSH_ID, TOOL_ERASER_ID } from '../utils/constants';
+import { TOOL_BRUSH_ID, TOOL_ERASER_ID, TOOL_CLICK_ID } from '../utils/constants';
 import { store } from './appState';
 
 export default class ToolsHandler {
   _canvas;
-
+  _infiniteCanvas;
   _toolState;
-
   _toolSetting;
-
   _points;
 
-  constructor(canvas, defaultTool) {
-    this._canvas = canvas;
+  constructor(canvas, infiniteCanvas, defaultTool) {
+    this._canvas = canvas; // Keep for backward compatibility, but not used
+    this._infiniteCanvas = infiniteCanvas;
     this._points = [];
     this._toolState = {
-      ctx: canvas.context,
+      ctx: infiniteCanvas?.ctx || null, // Use infinite canvas context
       axis: [0, 0],
       last: [0, 0],
       isPaddingOn: false,
@@ -30,30 +29,31 @@ export default class ToolsHandler {
   }
 
   getMousePosition(evt) {
-    const { zoom } = store.getState();
-    const { left, top } = this._canvas.canvas.getBoundingClientRect();
-
-    return this.getFixedCoords([
-      (evt.pageX - left) / zoom,
-      (evt.pageY - top) / zoom,
-    ]);
+    // Always use infinite canvas for coordinate conversion
+    return this._infiniteCanvas.screenToWorld(evt.pageX, evt.pageY);
   }
 
   /* Cuando dibuja, en pointer move */
   useTool = e => {
     e.preventDefault();
 
-    const axis = this.getMousePosition(e);
-    this.setCurrentAxis(axis);
     const tool = this._toolSetting.currentTool;
+    
+    if (tool === TOOL_CLICK_ID) {
+      // Handle panning
+      this._infiniteCanvas.updatePan(e.pageX, e.pageY);
+      return;
+    }
+
+    const worldPos = this.getMousePosition(e);
     const isDrawLine = tool === TOOL_BRUSH_ID || tool === TOOL_ERASER_ID;
 
-    if (!isDrawLine) {
-      this._canvas.restoreImageData();
-      drawMethods[tool](this._toolState);
+    if (isDrawLine) {
+      // Add point to current stroke in world coordinates
+      this._infiniteCanvas.addPointToStroke(worldPos.x, worldPos.y);
     } else {
-      this.drawPoints(axis);
-      this.setPrevAxis(axis);
+      // Update current shape in world coordinates
+      this._infiniteCanvas.updateShape(worldPos.x, worldPos.y);
     }
   };
 
@@ -68,13 +68,24 @@ export default class ToolsHandler {
 
   /* Prepara el pincel cuando se ejecuta pointer down */
   preparingTheBrush(e) {
-    const axis = this.getMousePosition(e);
-    this.setCurrentAxis(axis);
-    this.setPrevAxis(axis);
-    this._canvas.applySettings(this._toolSetting);
-    this._toolState.ctx = this._canvas.context;
-    // this._toolState.ctx.translate(0.5, 0.5); No funciona como esperaba...
-    this._points = [axis];
+    const tool = this._toolSetting.currentTool;
+    
+    if (tool === TOOL_CLICK_ID) {
+      // Start panning
+      this._infiniteCanvas.startPan(e.pageX, e.pageY);
+      return;
+    }
+
+    const worldPos = this.getMousePosition(e);
+    const isDrawLine = tool === TOOL_BRUSH_ID || tool === TOOL_ERASER_ID;
+
+    if (isDrawLine) {
+      // Start new stroke in world coordinates
+      this._infiniteCanvas.startStroke(worldPos.x, worldPos.y, this._toolSetting);
+    } else {
+      // Start new shape in world coordinates
+      this._infiniteCanvas.startShape(worldPos.x, worldPos.y, this._toolSetting);
+    }
   }
 
   /**
@@ -97,6 +108,24 @@ export default class ToolsHandler {
   resetToolState() {
     this.setPrevAxis([0, 0]);
     this.setCurrentAxis([0, 0]);
+    this._points = [];
+    
+    // Reset infinite canvas states
+    if (this._infiniteCanvas.currentStroke) {
+      this._infiniteCanvas.currentStroke = null;
+    }
+    
+    if (this._infiniteCanvas.currentShape) {
+      this._infiniteCanvas.currentShape = null;
+    }
+    
+    // Stop any ongoing panning
+    if (this._infiniteCanvas.isPanning) {
+      this._infiniteCanvas.stopPan();
+    }
+    
+    // Redraw to clear any temporary shapes
+    this._infiniteCanvas.redraw();
   }
 
   setCurrentAxis(axis) {
@@ -112,7 +141,7 @@ export default class ToolsHandler {
   }
 
   get _canvasElement() {
-    return this._canvas.canvas;
+    return this._infiniteCanvas.canvas;
   }
 
   set currentTool(updated) {
@@ -121,5 +150,65 @@ export default class ToolsHandler {
 
   get currentTool() {
     return this._toolSetting.currentTool;
+  }
+
+  startPanning(e) {
+    const { panOffsetX, panOffsetY } = store.getState();
+    const { left, top } = this._infiniteCanvas.canvas.getBoundingClientRect();
+    
+    this._panStart = {
+      x: e.pageX - left,
+      y: e.pageY - top,
+      offsetX: panOffsetX,
+      offsetY: panOffsetY,
+    };
+    
+    store.setState({ isPanning: true });
+  }
+
+  updatePanning(e) {
+    if (!this._panStart) return;
+    
+    const { left, top } = this._infiniteCanvas.canvas.getBoundingClientRect();
+    const currentX = e.pageX - left;
+    const currentY = e.pageY - top;
+    
+    const deltaX = currentX - this._panStart.x;
+    const deltaY = currentY - this._panStart.y;
+    
+    store.setState({
+      panOffsetX: this._panStart.offsetX + deltaX,
+      panOffsetY: this._panStart.offsetY + deltaY,
+    });
+  }
+
+  stopPanning() {
+    this._infiniteCanvas.stopPan();
+  }
+
+  // Finish current drawing operation
+  finishDrawing() {
+    const tool = this._toolSetting.currentTool;
+    
+    if (tool === TOOL_CLICK_ID) {
+      this.stopPanning();
+      return;
+    }
+
+    const isDrawLine = tool === TOOL_BRUSH_ID || tool === TOOL_ERASER_ID;
+
+    if (isDrawLine) {
+      // Finish current stroke
+      this._infiniteCanvas.finishStroke();
+    } else {
+      // Finish current shape
+      this._infiniteCanvas.finishShape();
+    }
+  }
+
+  // Handle zoom
+  handleZoom(e, deltaY) {
+    const zoomFactor = deltaY > 0 ? 0.9 : 1.1;
+    this._infiniteCanvas.zoom(e.pageX, e.pageY, zoomFactor);
   }
 }

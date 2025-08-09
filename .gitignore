@@ -28,3 +28,4 @@ package-lock.json
 .husky/commit-msg
 .husky/pre-commit
 push.sh
+CLAUDE.md

@@ -130,12 +130,24 @@ class AppGlobalState {
   }
 
   #deepMerge(target, source, path = []) {
+    // Ensure target is not null/undefined
+    if (!target || !source) return;
+    
     Object.keys(source).forEach(key => {
       const newPath = [...path, key];
       const proxyKey = newPath.join('.');
 
+      // Handle null values explicitly
+      if (source[key] === null) {
+        if (target[key] !== null) {
+          target[key] = source[key];
+          this._pendingUpdates.add(proxyKey);
+        }
+        return;
+      }
+
       if (isObject(source[key])) {
-        if (!(key in target)) {
+        if (!(key in target) || target[key] === null) {
           target[key] = {};
         }
         this.#deepMerge(target[key], source[key], newPath);
@@ -157,11 +169,25 @@ const store = new AppGlobalState({
   cursor: CURSOR_TYPE.DEFAULT,
   appOffsetX: 0,
   appOffsetY: 0,
-  zoom: 1,
+  // Camera system for infinite canvas
+  camera: {
+    x: 0,
+    y: 0,
+    zoom: 1,
+  },
+  // World elements with absolute coordinates
+  worldElements: [],
+  currentStroke: null,
   zenEnabled: false,
   theme: 'light',
   isHoldingSpace: false,
+  isTemporaryPanning: false, // For temporary panning with Space key
   isDrawing: false,
+  isPanning: false,
+  isStraightLineMode: false, // Ctrl/Cmd + Alt for straight lines
+  isOrthogonalMode: false, // Ctrl/Cmd + Alt + Shift for orthogonal lines (90° angles)
+  chainStartPoint: null, // For chaining orthogonal lines
+  previewLine: null, // For showing preview of next line in orthogonal mode
   hasHistory: Symbol(false),
   lastViewportView: [0, 0],
 });

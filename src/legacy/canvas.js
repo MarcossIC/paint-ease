@@ -1,6 +1,7 @@
 import { RoughCanvas } from 'roughjs/bin/canvas';
 import DeviceContext from '../domain/device';
 import CanvasHistory from './history';
+import { store } from '../lib/appState';
 
 export default class Canvas {
   /** @type {HTMLCanvasElement} - Canvas HTML donde se dibuja. */
@@ -43,9 +44,11 @@ export default class Canvas {
   startCanvas = () => {
     this.setCanvasSize();
 
+    this.resetTransforms();
     this._context2D.fillStyle = '#fafafa';
     this._context2D.strokeStyle = '#fafafa';
     this._context2D.fillRect(0, 0, this._canvas.width, this._canvas.height);
+    this.applyTransforms();
     this.setSnapshot();
   };
 
@@ -55,6 +58,7 @@ export default class Canvas {
     this._canvas.width = this._canvas.offsetWidth * dpr;
     this._canvas.height = this._canvas.offsetHeight * dpr;
     this._context2D.scale(dpr, dpr);
+    this.applyTransforms();
   }
 
   resizeCanvas = () => {
@@ -75,8 +79,10 @@ export default class Canvas {
   canvasUndo() {
     if (this._history.hasUndo()) {
       this.clear();
+      this.resetTransforms();
       const isLast = this._history.undo(this._context2D);
       if (isLast) this.clear();
+      this.applyTransforms();
     }
     return this._history.hasUndo();
   }
@@ -84,7 +90,9 @@ export default class Canvas {
   canvasRedo() {
     if (this._history.hasRedo()) {
       this.clear();
+      this.resetTransforms();
       this._history.redo(this._context2D);
+      this.applyTransforms();
     }
     return this._history.hasRedo();
   }
@@ -92,7 +100,9 @@ export default class Canvas {
   redraw(ctx) {
     this.clear();
     if (this._history.index >= 0) {
+      this.resetTransforms();
       this._history.goToLast(ctx);
+      this.applyTransforms();
     }
   }
 
@@ -105,7 +115,23 @@ export default class Canvas {
     this._context2D.lineJoin = 'round';
     this._context2D.globalAlpha = 1.0;
 
+    this.applyTransforms();
     this.setSnapshot();
+  }
+
+  applyTransforms() {
+    const { panOffsetX, panOffsetY, zoom } = store.getState();
+    const dpr = window.devicePixelRatio || 1;
+    // Primero aplicamos el DPR scaling, luego las transformaciones de pan/zoom
+    this._context2D.setTransform(
+      dpr * zoom, 0, 0, dpr * zoom, 
+      dpr * panOffsetX, dpr * panOffsetY
+    );
+  }
+
+  resetTransforms() {
+    const dpr = window.devicePixelRatio || 1;
+    this._context2D.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
   setMoveto(axis) {
@@ -148,7 +174,9 @@ export default class Canvas {
 
   /* Limpiar Lienzo para dejarlo en blanco */
   clear() {
+    this.resetTransforms();
     this._context2D.clearRect(0, 0, this._canvas.width, this._canvas.height);
+    this.applyTransforms();
   }
 
   get context() {

@@ -1,0 +1,42 @@
+🔍 Zoom event detected, deltaY: -100
+toolsHandler.js:212 🔍 ToolsHandler.handleZoom - factor: 1.1 pageX/Y: 523 300
+infiniteCanvas.js:111 🔍 InfiniteCanvas.zoom - oldZoom: 1 newZoom: 1.1 deltaZoom: 1.1
+infiniteCanvas.js:133 🔄 InfiniteCanvas updating store with camera: {x: 47.545454545454604, y: 27.27272727272727, zoom: 1.1}
+appState.js:121 🔄 AppGlobalState setState called with: {camera: {…}}
+appState.js:126 📝 Pending updates: (3) ['camera.x', 'camera.y', 'camera.zoom']
+appState.js:114 🔔 AppGlobalState notify called for key: camera.x subscribers: 0
+appState.js:114 🔔 AppGlobalState notify called for key: camera.y subscribers: 0
+appState.js:114 🔔 AppGlobalState notify called for key: camera.zoom subscribers: 0
+infiniteCanvas.js:645 🎨 PERFORM REDRAW - Elements to draw: 1
+infiniteCanvas.js:646 🎨 Current stroke: none
+infiniteCanvas.js:665 🔷 Drawing shape: btn-rectangle
+infiniteCanvas.js:670 🎨 Drew 1 elements
+infiniteCanvas.js:696 ✅ Redraw complete, marked as clean
+main.js:373 🔍 Zoom event detected, deltaY: -100
+toolsHandler.js:212 🔍 ToolsHandler.handleZoom - factor: 1.1 pageX/Y: 523 300
+infiniteCanvas.js:111 🔍 InfiniteCanvas.zoom - oldZoom: 1.1 newZoom: 1.2100000000000002 deltaZoom: 1.1
+infiniteCanvas.js:133 🔄 InfiniteCanvas updating store with camera: {x: 90.76859504132233, y: 52.06611570247934, zoom: 1.2100000000000002}
+appState.js:121 🔄 AppGlobalState setState called with: {camera: {…}}
+appState.js:126 📝 Pending updates: (3) ['camera.x', 'camera.y', 'camera.zoom']
+appState.js:114 🔔 AppGlobalState notify called for key: camera.x subscribers: 0
+appState.js:114 🔔 AppGlobalState notify called for key: camera.y subscribers: 0
+appState.js:114 🔔 AppGlobalState notify called for key: camera.zoom subscribers: 0
+infiniteCanvas.js:645 🎨 PERFORM REDRAW - Elements to draw: 1
+infiniteCanvas.js:646 🎨 Current stroke: none
+infiniteCanvas.js:665 🔷 Drawing shape: btn-rectangle
+infiniteCanvas.js:670 🎨 Drew 1 elements
+infiniteCanvas.js:696 ✅ Redraw complete, marked as clean
+main.js:373 🔍 Zoom event detected, deltaY: 100
+toolsHandler.js:212 🔍 ToolsHandler.handleZoom - factor: 0.9 pageX/Y: 523 300
+infiniteCanvas.js:111 🔍 InfiniteCanvas.zoom - oldZoom: 1.2100000000000002 newZoom: 1.0890000000000002 deltaZoom: 0.9
+infiniteCanvas.js:133 🔄 InfiniteCanvas updating store with camera: {x: 42.74288337924708, y: 24.517906336088156, zoom: 1.0890000000000002}
+appState.js:121 🔄 AppGlobalState setState called with: {camera: {…}}
+appState.js:126 📝 Pending updates: (3) ['camera.x', 'camera.y', 'camera.zoom']
+appState.js:114 🔔 AppGlobalState notify called for key: camera.x subscribers: 0
+appState.js:114 🔔 AppGlobalState notify called for key: camera.y subscribers: 0
+appState.js:114 🔔 AppGlobalState notify called for key: camera.zoom subscribers: 0
+infiniteCanvas.js:645 🎨 PERFORM REDRAW - Elements to draw: 1
+infiniteCanvas.js:646 🎨 Current stroke: none
+infiniteCanvas.js:665 🔷 Drawing shape: btn-rectangle
+infiniteCanvas.js:670 🎨 Drew 1 elements
+infiniteCanvas.js:696 ✅ Redraw complete, marked as clean

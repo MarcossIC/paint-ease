@@ -37,9 +37,8 @@
           <div
             class="w-full grid gap-8 items-start custom-cursor-default !pointer-events-none grid-cols-[1fr,2fr,1fr] fixed-pointer-container">
             <h2 class="visually-hidden">Menu tools board</h2>
-            <div></div>
             <section
-              class="flex-center !pointer-events-none custom-cursor-default fixed-pointer-container">
+              class="flex-center !pointer-events-none custom-cursor-default fixed-pointer-container mt-2">
               <div
                 id="tool-controls"
                 class="bg-gray-100 relative shadow-md custom-cursor-default flex-center user-none rounded-xl p-1"
@@ -47,9 +46,9 @@
                 <div class="w-full flex gap-x-2">
                   <label
                     id="btn-click"
-                    class="control-button btn"
-                    title="Neutral - 1"
+                    class="control-button btn tooltip-container"
                     tabindex="2">
+                    <div class="tooltip">Neutral (Ctrl+1)</div>
                     <input
                       type="radio"
                       name="tool"
@@ -78,9 +77,9 @@
                   </label>
                   <label
                     id="btn-brush"
-                    class="control-button btn"
-                    title="Brush - 2"
+                    class="control-button btn tooltip-container"
                     tabindex="3">
+                    <div class="tooltip">Brush (Ctrl+2)</div>
                     <input
                       type="radio"
                       name="tool"
@@ -104,11 +103,12 @@
                       <path d="M10.6 9a9 9 0 0 1 4.4 4.4" />
                     </svg>
                   </label>
+                  <div class="toolbar-driver"></div>
                   <label
                     id="btn-rectangle"
-                    class="control-button btn"
-                    title="Rectangle - 3"
+                    class="control-button btn tooltip-container"
                     tabindex="4">
+                    <div class="tooltip">Rectangle (Ctrl+3)</div>
                     <input
                       type="radio"
                       name="tool"
@@ -132,9 +132,9 @@
                   </label>
                   <label
                     id="btn-triangle"
-                    class="control-button btn"
-                    title="Triangle - 4"
+                    class="control-button btn tooltip-container"
                     tabindex="5">
+                    <div class="tooltip">Triangle (Ctrl+4)</div>
                     <input
                       type="radio"
                       name="tool"
@@ -158,9 +158,9 @@
                   </label>
                   <label
                     id="btn-circle"
-                    class="control-button btn"
-                    title="Circle - 5"
+                    class="control-button btn tooltip-container"
                     tabindex="6">
+                    <div class="tooltip">Circle (Ctrl+5)</div>
                     <input
                       type="radio"
                       name="tool"
@@ -181,11 +181,12 @@
                       <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
                     </svg>
                   </label>
+                  <div class="toolbar-driver"></div>
                   <label
                     id="btn-eraser"
-                    class="control-button btn"
-                    title="Eraser - 6"
+                    class="control-button btn tooltip-container"
                     tabindex="7">
+                    <div class="tooltip">Eraser (Ctrl+6)</div>
                     <input
                       type="radio"
                       name="tool"
@@ -210,9 +211,9 @@
                   </label>
                   <label
                     id="btn-trash-board"
-                    class="control-button btn"
-                    title="Clean board - 0"
+                    class="control-button btn tooltip-container"
                     tabindex="8">
+                    <div class="tooltip">Clean board (Ctrl+0)</div>
                     <input
                       type="radio"
                       name="clean-tool"
@@ -244,7 +245,7 @@
         </div>
         <footer
           id="tool-footer"
-          class="w-full absolute bottom-4 flex justify-end items-start custom-cursor-default !pointer-events-none px-4 fixed-pointer-container">
+          class="w-full absolute bottom-[44px] flex justify-end items-start custom-cursor-default !pointer-events-none px-4 fixed-pointer-container">
           <div
             class="size-full transition-transform ease-in-out duration-500 custom-cursor-default !pointer-events-none fixed-pointer-container">
             <section
@@ -274,6 +275,26 @@
             </section>
           </div>
         </footer>
+        <!-- Status bottom bar -->
+        <div id="status-bar" class="custom-cursor-default fixed-pointer-container">
+          <div class="status-left">
+            <div class="flex items-center gap-x-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mouse-pointer "><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path><path d="m13 13 6 6"></path></svg>
+              <span id="status-pos" aria-live="polite">X: 0 Y: 0</span>
+            </div>
+            <div class="flex items-center gap-x-1">
+              <span class="dot" aria-hidden="true"></span>
+              <span id="status-tool" aria-live="polite">Herramienta: neutral</span>
+            </div>
+            <div class="flex items-center gap-x-1">
+              <span class="grid" aria-hidden="true">▦</span>
+              <span id="status-elements" aria-live="polite">0 elementos</span>
+            </div>
+          </div>
+          <div class="status-right">
+            <span id="status-zoom" aria-live="polite">Zoom: 100%</span>
+          </div>
+        </div>
       </div>
       <main class="w-full h-full">
         <canvas id="canvas" class="canvas relative z-[2]"></canvas>
