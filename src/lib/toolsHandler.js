@@ -14,7 +14,6 @@ export default class ToolsHandler {
     this._infiniteCanvas = infiniteCanvas;
     this._points = [];
     this._toolState = {
-      ctx: infiniteCanvas?.ctx || null, // Use infinite canvas context
       axis: [0, 0],
       last: [0, 0],
       isPaddingOn: false,
@@ -30,7 +29,7 @@ export default class ToolsHandler {
 
   getMousePosition(evt) {
     // Always use infinite canvas for coordinate conversion
-    return this._infiniteCanvas.screenToWorld(evt.pageX, evt.pageY);
+    return this._infiniteCanvas.screenToWorld(evt.clientX, evt.clientY);
   }
 
   /* Cuando dibuja, en pointer move */
@@ -41,7 +40,7 @@ export default class ToolsHandler {
     
     if (tool === TOOL_CLICK_ID) {
       // Handle panning
-      this._infiniteCanvas.updatePan(e.pageX, e.pageY);
+      this._infiniteCanvas.updatePan(e.clientX, e.clientY);
       return;
     }
 
@@ -57,13 +56,10 @@ export default class ToolsHandler {
     }
   };
 
+  // Legacy function - no longer used with InfiniteCanvas
   drawPoints(axis) {
-    this._points.push(axis);
-    if (this._points.length >= 3) {
-      drawCatmullRomSpline(this._toolState.ctx, this._points);
-      // Mantén los últimos 3 puntos para la siguiente curva
-      this._points = this._points.slice(-3);
-    }
+    // This function is obsolete with InfiniteCanvas
+    // All drawing is handled by InfiniteCanvas methods
   }
 
   /* Prepara el pincel cuando se ejecuta pointer down */
@@ -72,7 +68,7 @@ export default class ToolsHandler {
     
     if (tool === TOOL_CLICK_ID) {
       // Start panning
-      this._infiniteCanvas.startPan(e.pageX, e.pageY);
+      this._infiniteCanvas.startPan(e.clientX, e.clientY);
       return;
     }
 
@@ -152,6 +148,16 @@ export default class ToolsHandler {
     return this._toolSetting.currentTool;
   }
 
+  setColor(hexColor) {
+    if (typeof hexColor === 'string' && hexColor) {
+      this._toolSetting.color = hexColor;
+      // Sync global state for UI subscriptions
+      try {
+        store.setState({ currentColor: hexColor });
+      } catch {}
+    }
+  }
+
   startPanning(e) {
     const { panOffsetX, panOffsetY } = store.getState();
     const { left, top } = this._infiniteCanvas.canvas.getBoundingClientRect();
@@ -209,6 +215,6 @@ export default class ToolsHandler {
   // Handle zoom
   handleZoom(e, deltaY) {
     const zoomFactor = deltaY > 0 ? 0.9 : 1.1;
-    this._infiniteCanvas.zoom(e.pageX, e.pageY, zoomFactor);
+    this._infiniteCanvas.zoom(e.clientX, e.clientY, zoomFactor);
   }
 }

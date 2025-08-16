@@ -54,7 +54,7 @@ export default class Canvas {
 
   setCanvasSize() {
     this._context2D.setTransform(1, 0, 0, 1, 0, 0);
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.ceil(window.devicePixelRatio);
     this._canvas.width = this._canvas.offsetWidth * dpr;
     this._canvas.height = this._canvas.offsetHeight * dpr;
     this._context2D.scale(dpr, dpr);
@@ -121,7 +121,7 @@ export default class Canvas {
 
   applyTransforms() {
     const { panOffsetX, panOffsetY, zoom } = store.getState();
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.ceil(window.devicePixelRatio);
     // Primero aplicamos el DPR scaling, luego las transformaciones de pan/zoom
     this._context2D.setTransform(
       dpr * zoom, 0, 0, dpr * zoom, 
@@ -130,7 +130,7 @@ export default class Canvas {
   }
 
   resetTransforms() {
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.ceil(window.devicePixelRatio);
     this._context2D.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 

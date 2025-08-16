@@ -120,6 +120,7 @@ class AppGlobalState {
     this._batchUpdate = true;
     this.#deepMerge(this.state, newState);
     this._batchUpdate = false;
+    localStorage.setItem('paintEase', JSON.stringify(this.state));
 
     this._pendingUpdates.forEach(key => {
       const newValue = getNestedValue(this.state, key.split('.'));
@@ -163,6 +164,7 @@ class AppGlobalState {
   getState() {
     return this.state;
   }
+
 }
 
 const store = new AppGlobalState({
@@ -190,6 +192,34 @@ const store = new AppGlobalState({
   previewLine: null, // For showing preview of next line in orthogonal mode
   hasHistory: Symbol(false),
   lastViewportView: [0, 0],
+  // Current drawing color (for UI sync)
+  currentColor: '#000000',
+  // Color palette state
+  colorPalette: {
+    defaults: [
+      '#000000', '#374151', '#6B7280', '#9CA3AF',
+      '#EF4444', '#F97316', '#F59E0B',
+      '#84CC16', '#22C55E', '#10B981',
+      '#06B6D4', '#0EA5E9', '#6366F1', '#8B5CF6',
+    ],
+    // Custom slots (up to 7)
+    custom: [],
+    // Kept for backward compatibility, not used for rendering anymore
+    active: [
+      '#000000', '#374151', '#6B7280', '#9CA3AF',
+      '#EF4444', '#F97316', '#F59E0B',
+      '#84CC16', '#22C55E', '#10B981',
+      '#06B6D4', '#0EA5E9', '#6366F1', '#8B5CF6',
+    ],
+  },
+  // Display and color space support detection
+  support: {
+    p3: false,
+    rec2020: false,
+    cssColorFunction: false,
+    displayP3Media: false,
+    canvasDisplayP3: false,
+  },
 });
 
 export { store };

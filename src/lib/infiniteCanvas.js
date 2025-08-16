@@ -2,12 +2,26 @@ import { store } from './appState';
 import WorldHistory from '../domain/worldHistory';
 import { TOOL_RECTANGLE_ID, TOOL_CIRCLE_ID, TOOL_TRIANGLE_ID } from '../utils/constants';
 import { strokeDrawingMethods, rectangleDrawingMethods } from './draw';
+import { getRecommendedColorSpace } from '../utils/supports';
 
 export class InfiniteCanvas {
   constructor(canvas) {
     this.canvas = canvas;
-    // Add willReadFrequently for better performance when reading pixel data frequently
-    this.ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const colorSpace = getRecommendedColorSpace();
+    // Enhanced context options for better rendering quality
+    this.ctx = canvas.getContext('2d', {
+      colorSpace, 
+      willReadFrequently: true,
+      alpha: true,
+      // CRITICAL: Do NOT use desynchronized: true
+      // It causes drawing operations to not appear immediately on screen
+      // because the canvas renders asynchronously from the main thread.
+      // This breaks real-time drawing functionality in paint applications.
+      // desynchronized: true // BROKEN - causes drawing to fail
+    });
+    
+    // Enable high-quality rendering
+    this.setupHighQualityRendering();
     this.worldElements = [];
     this.currentStroke = null;
     this.currentShape = null;
@@ -41,20 +55,41 @@ export class InfiniteCanvas {
     this.history = new WorldHistory();
     
     // Drawing method selector - allows testing different approaches
-    this.strokeDrawingMethod = 'quadratic'; // 'quadratic', 'catmullrom', 'bezier'
+    // Default to Bézier; expose 'rough' (RoughJS) as an alternative
+    this.strokeDrawingMethod = 'bezier'; // 'quadratic', 'catmullrom', 'bezier', 'rough'
     this.shapeDrawingMethod = 'basic'; // 'basic', 'rounded'
+  }
+  
+  // Setup high-quality rendering settings
+  setupHighQualityRendering() {
+    // Only configure quality-related flags here. Sizing and DPR scaling
+    // are handled in setupCanvas() to prevent compounded transforms.
+    // High-quality rendering settings
+    this.ctx.imageSmoothingEnabled = true;
+    this.ctx.imageSmoothingQuality = 'high';
+    
+    // Better line rendering
+    this.ctx.lineCap = 'round';
+    this.ctx.lineJoin = 'round';
+    
+    // Text rendering quality
+    this.ctx.textRenderingOptimization = 'optimizeQuality';
   }
 
   // Convert screen coordinates to world coordinates
   screenToWorld(screenX, screenY) {
-    // Since canvas now covers full viewport, we can use screenX/Y directly
-    const x = screenX / this.camera.zoom + this.camera.x;
-    const y = screenY / this.camera.zoom + this.camera.y;
+    // Normalize to canvas viewport in case layout offsets exist
+    const rect = this.canvas.getBoundingClientRect();
+    const localX = screenX - rect.left;
+    const localY = screenY - rect.top;
+    const x = localX / this.camera.zoom + this.camera.x;
+    const y = localY / this.camera.zoom + this.camera.y;
     return { x, y };
   }
 
   // Convert world coordinates to screen coordinates
   worldToScreen(worldX, worldY) {
+    // Return coordinates relative to the canvas top-left (local screen space)
     const x = (worldX - this.camera.x) * this.camera.zoom;
     const y = (worldY - this.camera.y) * this.camera.zoom;
     return { x, y };
@@ -75,11 +110,14 @@ export class InfiniteCanvas {
   // Start panning operation
   startPan(screenX, screenY) {
     this.isPanning = true;
+    const rect = this.canvas.getBoundingClientRect();
     this.panStart = {
       x: screenX,
       y: screenY,
       cameraX: this.camera.x,
       cameraY: this.camera.y,
+      rectLeft: rect.left,
+      rectTop: rect.top,
     };
   }
 
@@ -87,8 +125,12 @@ export class InfiniteCanvas {
   updatePan(screenX, screenY) {
     if (!this.isPanning || !this.panStart) return;
 
-    const deltaX = (screenX - this.panStart.x) / this.camera.zoom;
-    const deltaY = (screenY - this.panStart.y) / this.camera.zoom;
+    // Compute deltas in local canvas coordinates
+    const rect = this.canvas.getBoundingClientRect();
+    const localX = screenX - rect.left;
+    const localY = screenY - rect.top;
+    const deltaX = (localX - (this.panStart.x - this.panStart.rectLeft)) / this.camera.zoom;
+    const deltaY = (localY - (this.panStart.y - this.panStart.rectTop)) / this.camera.zoom;
 
     this.camera.x = this.panStart.cameraX - deltaX;
     this.camera.y = this.panStart.cameraY - deltaY;
@@ -125,13 +167,15 @@ export class InfiniteCanvas {
     // Update zoom
     this.camera.zoom = newZoom;
     
-    // Get new screen position of the same world point
+    // Get new screen position of the same world point (local to canvas)
     const newScreenPos = this.worldToScreen(worldPos.x, worldPos.y);
     
     // Adjust camera to keep the point under cursor
-    // Since canvas covers full screen, screenX/Y are the target positions
-    this.camera.x += (newScreenPos.x - screenX) / this.camera.zoom;
-    this.camera.y += (newScreenPos.y - screenY) / this.camera.zoom;
+    const rect = this.canvas.getBoundingClientRect();
+    const localTargetX = screenX - rect.left;
+    const localTargetY = screenY - rect.top;
+    this.camera.x += (newScreenPos.x - localTargetX) / this.camera.zoom;
+    this.camera.y += (newScreenPos.y - localTargetY) / this.camera.zoom;
 
     // Update store
     store.setState({
@@ -371,7 +415,7 @@ export class InfiniteCanvas {
   drawStroke(stroke) {
     if (!stroke.points || stroke.points.length === 0) return;
 
-    this.ctx.beginPath();
+    // Set stroke properties before drawing
     this.ctx.strokeStyle = stroke.settings.color || '#000000';
     this.ctx.lineWidth = stroke.settings.size || 2;
     this.ctx.lineCap = 'round';
@@ -380,10 +424,13 @@ export class InfiniteCanvas {
     if (stroke.points.length === 1) {
       // Single point
       const point = stroke.points[0];
+      this.ctx.beginPath();
+      this.ctx.fillStyle = stroke.settings.color || '#000000';
       this.ctx.arc(point.x, point.y, stroke.settings.size / 2, 0, Math.PI * 2);
       this.ctx.fill();
     } else if (stroke.isStraightLine) {
       // Straight line - just draw from start to end
+      this.ctx.beginPath();
       this.ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
       const endPoint = stroke.points[stroke.points.length - 1];
       this.ctx.lineTo(endPoint.x, endPoint.y);
@@ -399,7 +446,8 @@ export class InfiniteCanvas {
   drawShape(shape) {
     this.ctx.beginPath();
     this.ctx.strokeStyle = shape.settings.color || '#000000';
-    this.ctx.fillStyle = shape.settings.paddingColor || 'transparent';
+    // If padding is requested, use provided color; otherwise ensure fill doesn't block strokes
+    this.ctx.fillStyle = (shape.settings.isPaddingOn ? (shape.settings.paddingColor || shape.settings.color || '#000000') : 'transparent');
     this.ctx.lineWidth = shape.settings.size || 2;
     this.ctx.lineCap = 'round';
     this.ctx.lineJoin = 'round';
@@ -446,16 +494,16 @@ export class InfiniteCanvas {
 
   // Clear the entire canvas
   clear() {
-    const dpr = window.devicePixelRatio || 1;
     this.ctx.save();
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    this.ctx.clearRect(0, 0, this.canvas.width / dpr, this.canvas.height / dpr);
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.restore();
   }
 
   // Set up canvas size and DPR
   setupCanvas() {
-    const dpr = window.devicePixelRatio || 1;
+    // Use the exact devicePixelRatio to avoid fractional blurring
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
     
     // Force canvas to fill entire viewport
     const width = window.innerWidth;
@@ -465,8 +513,8 @@ export class InfiniteCanvas {
     this.canvas.width = width * dpr;
     this.canvas.height = height * dpr;
     
-    // Scale the context to match DPR
-    this.ctx.scale(dpr, dpr);
+    // Reset any previous transform and apply DPR scale only once
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     
     // Set canvas CSS dimensions to match viewport
     this.canvas.style.width = width + 'px';
@@ -489,7 +537,7 @@ export class InfiniteCanvas {
       try {
         this.backgroundCanvas = new OffscreenCanvas(width * dpr, height * dpr);
         this.backgroundCtx = this.backgroundCanvas.getContext('2d', { willReadFrequently: true });
-        this.backgroundCtx.scale(dpr, dpr);
+        this.backgroundCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
         this.backgroundDirty = true;
       } catch (e) {
         this.backgroundCanvas = null;
@@ -505,11 +553,10 @@ export class InfiniteCanvas {
   renderBackgroundOffscreen() {
     if (!this.backgroundDirty || !this.backgroundCtx) return;
     
-    const dpr = window.devicePixelRatio || 1;
     this.backgroundCtx.save();
-    this.backgroundCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.backgroundCtx.setTransform(1, 0, 0, 1, 0, 0);
     this.backgroundCtx.fillStyle = '#fafafa';
-    this.backgroundCtx.fillRect(0, 0, this.backgroundCanvas.width / dpr, this.backgroundCanvas.height / dpr);
+    this.backgroundCtx.fillRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
     this.backgroundCtx.restore();
     
     this.backgroundDirty = false;
@@ -519,10 +566,9 @@ export class InfiniteCanvas {
   drawBackground() {
     this.ctx.save();
     // Reset any transformations to draw background in screen space
-    const dpr = window.devicePixelRatio || 1;
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.fillStyle = '#fafafa';
-    this.ctx.fillRect(0, 0, this.canvas.width / dpr, this.canvas.height / dpr);
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.restore();
   }
 
