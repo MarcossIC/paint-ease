@@ -663,6 +663,15 @@ export class InfiniteCanvas {
       } else if (element.type === 'shape') {
         this.drawShape(element);
         drawnCount++;
+      } else if (element.type === 'laser') {
+        this.drawLaserLine(element);
+        drawnCount++;
+      } else if (element.type === 'laser-point') {
+        this.drawLaserPoint(element);
+        drawnCount++;
+      } else if (element.type === 'laser-trail') {
+        this.drawLaserTrail(element);
+        drawnCount++;
       }
     }
     
@@ -790,7 +799,6 @@ export class InfiniteCanvas {
     if (strokeDrawingMethods[method]) {
       this.strokeDrawingMethod = method;
       this.redraw(); // Redraw to apply changes to existing strokes
-      console.log(`🎨 Stroke drawing method changed to: ${method}`);
     } else {
       console.warn(`❌ Unknown stroke drawing method: ${method}`);
     }
@@ -801,7 +809,6 @@ export class InfiniteCanvas {
     if (rectangleDrawingMethods[method]) {
       this.shapeDrawingMethod = method;
       this.redraw(); // Redraw to apply changes to existing shapes
-      console.log(`🔷 Shape drawing method changed to: ${method}`);
     } else {
       console.warn(`❌ Unknown shape drawing method: ${method}`);
     }
@@ -814,5 +821,160 @@ export class InfiniteCanvas {
 
   getAvailableShapeMethods() {
     return Object.keys(rectangleDrawingMethods);
+  }
+
+  // Draw laser line with glow effect
+  drawLaserLine(element) {
+    if (!element.points || element.points.length < 2) return;
+
+    const ctx = this.ctx;
+    ctx.save();
+
+    // Set opacity
+    ctx.globalAlpha = element.opacity || 1;
+
+    // Create glow effect with multiple passes
+    const glowIntensity = element.glowIntensity || 0.6;
+    const color = element.color || '#ff0000';
+    const strokeWidth = element.strokeWidth || 1; // Thinner default
+
+    // Outer glow (wider, more transparent) 
+    ctx.shadowColor = color;
+    ctx.shadowBlur = element.shadowBlur || 4; // Reduced blur
+    ctx.lineWidth = strokeWidth * 1.5; // Less wide glow
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = (element.opacity || 1) * 0.2; // More transparent glow
+
+    ctx.beginPath();
+    ctx.moveTo(element.points[0].x, element.points[0].y);
+    for (let i = 1; i < element.points.length; i++) {
+      ctx.lineTo(element.points[i].x, element.points[i].y);
+    }
+    ctx.stroke();
+
+    // Inner line (solid, bright)
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = strokeWidth;
+    ctx.globalAlpha = element.opacity || 1;
+    ctx.strokeStyle = color;
+
+    ctx.beginPath();
+    ctx.moveTo(element.points[0].x, element.points[0].y);
+    for (let i = 1; i < element.points.length; i++) {
+      ctx.lineTo(element.points[i].x, element.points[i].y);
+    }
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // Draw laser point with glow effect
+  drawLaserPoint(element) {
+    const ctx = this.ctx;
+    ctx.save();
+
+    const x = element.x;
+    const y = element.y;
+    const radius = element.radius || 4;
+    const color = element.color || '#ff0000';
+
+    // Set opacity
+    ctx.globalAlpha = element.opacity || 1;
+
+    // Outer glow
+    ctx.shadowColor = color;
+    ctx.shadowBlur = element.shadowBlur || 12;
+    ctx.fillStyle = color;
+    ctx.globalAlpha = (element.opacity || 1) * 0.4;
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 2, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Inner bright dot
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = element.opacity || 1;
+    ctx.fillStyle = color;
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // White center dot
+    ctx.fillStyle = 'white';
+    ctx.globalAlpha = (element.opacity || 1) * 0.8;
+    
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 0.3, 0, 2 * Math.PI);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Draw laser trail with proper fade effect (oldest fades first)
+  drawLaserTrail(element) {
+    if (!element.trailPoints || element.trailPoints.length < 2) return;
+
+    const ctx = this.ctx;
+    const now = element.currentTime || Date.now();
+    const trailDuration = element.trailDuration || 600;
+    const color = element.color || '#ff0000';
+    
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Draw trail with individual point opacity based on age
+    for (let i = 1; i < element.trailPoints.length; i++) {
+      const prevPoint = element.trailPoints[i - 1];
+      const currentPoint = element.trailPoints[i];
+      
+      // Calculate opacity based on point age (older points are more transparent)
+      const pointAge = now - currentPoint.timestamp;
+      const ageProgress = Math.min(1, pointAge / trailDuration);
+      
+      // Smooth fade curve - slower at start, faster at end (laser trail effect)
+      let opacity;
+      if (ageProgress < 0.2) {
+        opacity = 1 - (ageProgress * 0.1); // Very slow fade initially
+      } else if (ageProgress < 0.8) {
+        const fadeProgress = (ageProgress - 0.2) / 0.6;
+        opacity = 0.98 - (fadeProgress * 0.7); // Moderate fade
+      } else {
+        const fadeProgress = (ageProgress - 0.8) / 0.2;
+        opacity = 0.28 * Math.pow(1 - fadeProgress, 2); // Accelerated fade at end
+      }
+      
+      opacity = Math.max(0, Math.min(1, opacity));
+      
+      if (opacity <= 0.01) continue; // Skip nearly invisible segments
+      
+      // Draw segment with calculated opacity and glow
+      ctx.globalAlpha = opacity;
+      
+      // Outer glow
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 3 * opacity; // Blur reduces with opacity
+      ctx.lineWidth = element.strokeWidth * 1.5;
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = opacity * 0.3;
+      
+      ctx.beginPath();
+      ctx.moveTo(prevPoint.x, prevPoint.y);
+      ctx.lineTo(currentPoint.x, currentPoint.y);
+      ctx.stroke();
+      
+      // Inner bright line
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = element.strokeWidth || 1;
+      ctx.globalAlpha = opacity;
+      
+      ctx.beginPath();
+      ctx.moveTo(prevPoint.x, prevPoint.y);
+      ctx.lineTo(currentPoint.x, currentPoint.y);
+      ctx.stroke();
+    }
+
+    ctx.restore();
   }
 }

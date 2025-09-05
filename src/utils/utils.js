@@ -13,6 +13,7 @@ let _i = 0;
 export const $ = el => document.querySelector(el);
 export const $FROM = (e, s) => e.querySelector(s);
 export const $$ = el => document.querySelectorAll(el);
+export const $FROM_ALL = (e, s) => e.querySelectorAll(s);
 
 export const calcSteps = distance => {
   return Math.max(Math.floor(distance), 1);

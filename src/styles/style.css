@@ -414,7 +414,7 @@ body {
 }
 .color-swatch.is-selected { outline: 2px solid #3b82f6; outline-offset: 2px; }
 
-#history-controls {
+#history-controls, #zoom-controls {
   & .control-button {
     outline: 1px solid var(--control-outline);
     padding: 0.75rem;

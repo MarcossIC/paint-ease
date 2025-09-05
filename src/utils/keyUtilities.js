@@ -7,6 +7,7 @@ import {
   TOOL_TRIANGLE_ID,
   TOOL_ERASER_ID,
   TOOL_TRASH_ID,
+  TOOL_LASER_ID,
 } from './constants';
 
 export const CODES = {
@@ -107,15 +108,17 @@ export const isArrowKey = key =>
 export const KEYS_TO_TOOLS = {
   [KEYS['1']]: TOOL_CLICK_ID,
   [KEYS['2']]: TOOL_BRUSH_ID,
-  [KEYS['3']]: TOOL_RECTANGLE_ID,
-  [KEYS['4']]: TOOL_TRIANGLE_ID,
-  [KEYS['5']]: TOOL_CIRCLE_ID,
-  [KEYS['6']]: TOOL_ERASER_ID,
-  [KEYS['7']]: TOOL_TRASH_ID,
+  [KEYS['3']]: TOOL_LASER_ID,
+  [KEYS['4']]: TOOL_RECTANGLE_ID,
+  [KEYS['5']]: TOOL_TRIANGLE_ID,
+  [KEYS['6']]: TOOL_CIRCLE_ID,
+  [KEYS['7']]: TOOL_ERASER_ID,
+  [KEYS['0']]: TOOL_TRASH_ID,
   [KEYS.R]: TOOL_TRASH_ID,
 };
 
 export const isActionKey = key =>
+  key === KEYS[0] ||
   key === KEYS[1] ||
   key === KEYS[2] ||
   key === KEYS[3] ||

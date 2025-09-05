@@ -162,7 +162,7 @@ export class ColorManager {
     
     try {
       const mode = getMode(colorObj.mode);
-      if (mode && mode.serialize) {
+      if (mode && mode.serialize && typeof mode.serialize === 'function') {
         return mode.serialize(colorObj);
       }
       

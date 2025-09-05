@@ -11,10 +11,14 @@ import {
   TOOL_BRUSH_ID,
   CURSOR_TYPE,
   TOOL_COLOR_ID,
+  ZOOM_IN_ID,
+  ZOOM_OUT_ID,
+  TOOL_LASER_ID,
 } from './utils/constants';
 import { $, $FROM, addEventListener } from './utils/utils';
 import ToolsHandler from './lib/toolsHandler';
 import { InfiniteCanvas } from './lib/infiniteCanvas';
+import { LaserPointer } from './lib/laserPointer';
 import { store } from './lib/appState';
 import Emitter from './domain/emitter';
 import ColorManager from './domain/colorManager';
@@ -29,6 +33,8 @@ import { initSupport } from './utils/supports';
   const canvasHtml = $('#canvas');
   const btnUndo = $('#btn-undo');
   const btnRedo = $('#btn-redo');
+  const btnZoomIn = $('#zoom-in');
+  const btnZoomOut = $('#zoom-out');
   const toolsContainer = $('#tool-controls');
   // Visual color button and popover
   const colorChip = $('#color-chip');
@@ -52,6 +58,7 @@ import { initSupport } from './utils/supports';
   const statusElements = $('#status-elements');
   const statusZoom = $('#status-zoom');
   const infiniteCanvas = new InfiniteCanvas(canvasHtml);
+  const laserPointer = new LaserPointer(infiniteCanvas);
   const toolHandler = new ToolsHandler(null, infiniteCanvas, TOOL_CLICK_ID);
   // Initialize canvas immediately to ensure sizing and transforms are ready
   infiniteCanvas.init();
@@ -72,15 +79,10 @@ import { initSupport } from './utils/supports';
   document.body.appendChild(customColorPicker);
   document.body.appendChild(oklchColorPicker);
   
-  // Debug: Check if components are properly created
-  console.log('Custom Color Picker:', customColorPicker);
-  console.log('OKLCH Color Picker:', oklchColorPicker);
-  console.log('OKLCH open method:', oklchColorPicker.open);
-  console.log('OKLCH prototype methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(oklchColorPicker)));
-  console.log('OKLCH constructor name:', oklchColorPicker.constructor.name);
   const onRemoveEventListeners = new Emitter();
   const onRemoveHistoryListener = new Emitter();
   const onRemoveSupportListeners = new Emitter();
+  const onRemoveColorPickerListeners = new Emitter();
 
   // --------------- ACTIONS ---------------------
   const onRedo = () => {
@@ -95,6 +97,26 @@ import { initSupport } from './utils/supports';
     
     btnUndo.disabled = !infiniteCanvas.canUndo();
     btnRedo.disabled = !infiniteCanvas.canRedo();
+  };
+
+  const onZoomIn = () => {
+    // Get canvas center for zoom focal point
+    const rect = canvasHtml.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Zoom in by factor of 1.2
+    infiniteCanvas.zoom(centerX, centerY, 1.2);
+  };
+
+  const onZoomOut = () => {
+    // Get canvas center for zoom focal point
+    const rect = canvasHtml.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Zoom out by factor of 0.8333 (1/1.2)
+    infiniteCanvas.zoom(centerX, centerY, 0.8333);
   };
 
   // ---------- COLOR UI HELPERS ----------
@@ -125,12 +147,14 @@ import { initSupport } from './utils/supports';
   const onSetTool = (toolUpdated, target) => {
     // Special case: open color palette, do not change cursor/tool
     if (toolUpdated === TOOL_COLOR_ID) {
-      // Toggle the color popover only
+      // const colorRadio = colorButton?.querySelector('input[type="radio"]');
+      const isCurrentlyHidden = colorPopover?.classList.contains('hidden');
+      // Toggle popover visibility
       colorPopover?.classList.toggle('hidden');
-      if (colorPopover.classList.contains('hidden')) {
-        const colorRadio = colorButton?.querySelector('input[type="radio"]');
-        if (colorRadio) colorRadio.checked = false;
-      }
+      // While popover is open, mark button as active (checked). When closing, uncheck
+      const shouldBeChecked = Boolean(isCurrentlyHidden);
+      if (target) target.checked = shouldBeChecked;
+      // if (colorRadio) colorRadio.checked = shouldBeChecked;
       return;
     }
 
@@ -155,6 +179,256 @@ import { initSupport } from './utils/supports';
   };
 
   // --------------- EVENTS ---------------------
+
+  // OKLCH Color Picker event handlers  
+  const onOKLCHColorConfirm = (e, idx) => {
+    const newColor = e.detail.color;
+    const oklchData = e.detail.oklch;
+    const colorSpace = e.detail.colorSpace;
+    const formats = e.detail.formats;
+    const gamutInfo = e.detail.gamut;
+    
+    // Use the best color format that includes alpha
+    let colorForDrawing = newColor;
+    let colorForDisplay = newColor;
+    
+    // If there's alpha, use RGBA format for drawing and display
+    if (oklchData.a < 1) {
+      // Try to get RGBA format from ColorManager
+      try {
+        const rgbaColor = formats?.rgb;
+        if (rgbaColor && rgbaColor.r !== undefined) {
+          colorForDrawing = `rgba(${Math.round(rgbaColor.r * 255)}, ${Math.round(rgbaColor.g * 255)}, ${Math.round(rgbaColor.b * 255)}, ${oklchData.a})`;
+          colorForDisplay = colorForDrawing;
+        } else if (formats?.serialized?.rgb) {
+          colorForDrawing = formats.serialized.rgb;
+          colorForDisplay = colorForDrawing;
+        } else {
+          // Fallback: use hex with alpha
+          colorForDrawing = newColor;
+          colorForDisplay = newColor;
+        }
+      } catch (error) {
+        console.warn('Failed to get RGBA format, using hex:', error);
+        colorForDrawing = newColor;
+        colorForDisplay = newColor;
+      }
+    }
+    
+    // Update the color in the custom palette (store the full hex with alpha)
+    const { custom: currentCustom } = colorManager.getColorPalette();
+    const updatedCustom = [...currentCustom];
+    updatedCustom[idx] = newColor; // Store the hex (with alpha if present)
+    
+    // Update store
+    store.setState({ colorPalette: { custom: updatedCustom } });
+    
+    // Set as active color for drawing (use format with alpha)
+    toolHandler.setColor(colorForDrawing);
+    
+    // Update color chip with proper alpha support
+    if (colorChip) {
+      // Set up checkerboard background and color overlay for alpha
+      if (oklchData.a < 1) {
+        colorChip.style.background = `
+          repeating-conic-gradient(#c0c0c0 0% 25%, transparent 0% 50%) 50% / 4px 4px,
+          ${colorForDisplay}
+        `;
+      } else {
+        colorChip.style.background = colorForDisplay;
+      }
+    }
+    
+    // Store current color with alpha information
+    store.setState({ 
+      currentColor: newColor,
+      currentColorAlpha: oklchData.a,
+      currentColorFormats: formats
+    });
+    
+    // Update input with new color
+    if (modalInput) modalInput.value = newColor;
+    
+    // Re-render UI
+    renderPopoverFromPalette();
+    openColorEditor();
+    
+    // Update visual selection
+    updateColorSelection(newColor);
+  };
+
+  const onModalActiveGridRemove = (idx) => {
+    if (colorManager.removeCustomColor(idx)) {
+      renderPopoverFromPalette();
+      openColorEditor();
+    }
+  };
+
+  const onModalActiveGridEdit = (idx) => {
+    // Open custom color picker for editing
+    const { custom } = colorManager.getColorPalette();
+    const hex = custom[idx] || '#000000';
+    
+    // Create event handlers for this specific edit session
+    const handleColorConfirm = (e) => {
+      onOKLCHColorConfirm(e, idx);
+      onRemoveColorPickerListeners.trigger();
+    };
+
+    // Add to removal queue - this replaces handleColorCancel
+    onRemoveColorPickerListeners.once(
+      addEventListener(oklchColorPicker, 'colorconfirm', handleColorConfirm),
+      addEventListener(oklchColorPicker, 'colorcancel', ()=>onRemoveColorPickerListeners.trigger()),
+    );
+    
+    // Wait for component to be defined and then open
+    customElements.whenDefined('oklch-color-picker').then(() => {
+      // Ensure upgrade for elements created before definition
+      if (customElements.upgrade) {
+        try { customElements.upgrade(oklchColorPicker); } catch (_) {}
+      }
+      if (typeof oklchColorPicker.open === 'function') {
+        oklchColorPicker.open(hex);
+      } else {
+        // Fallback to attributes
+        if (hex && colorManager.isValidHex(hex)) {
+          oklchColorPicker.setAttribute('initial-color', hex);
+        }
+        oklchColorPicker.setAttribute('open', '');
+      }
+    }).catch(err => {
+      console.error('Error waiting for OKLCH component:', err);
+    });
+    
+    // Also mark as selected slot for visual feedback
+    colorManager.setSelectedSlot(idx);
+    if (modalInput) modalInput.value = hex;
+  };
+
+  const onModalActiveGridColorSelect = (idx, hex) => {
+    // Set as active color for drawing
+    toolHandler.setColor(hex);
+    if (colorChip) colorChip.style.background = hex;
+    store.setState({ currentColor: hex });
+    
+    // Update input with selected color
+    if (modalInput) modalInput.value = hex;
+    
+    // Update visual selection in both grids
+    updateColorSelection(hex);
+    
+    colorManager.setSelectedSlot(idx);
+  };
+
+  const onModalActiveGridClick = (e) => {
+    const actionBtn = e.target.closest('.swatch-action');
+    const swatch = e.target.closest('.color-swatch');
+    if (!swatch) return;
+    
+    const idx = Number(swatch.getAttribute('data-index'));
+    if (Number.isNaN(idx)) return;
+    
+    // If pressed a specific action
+    if (actionBtn) {
+      const action = actionBtn.getAttribute('data-action');
+      
+      if (action === 'remove') {
+        onModalActiveGridRemove(idx);
+        return;
+      }
+      
+      if (action === 'edit') {
+        onModalActiveGridEdit(idx);
+        return;
+      }
+    } else {
+      // Regular click on color swatch - set as active color AND select slot
+      const hex = swatch.getAttribute('data-color');
+      if (hex) {
+        onModalActiveGridColorSelect(idx, hex);
+      }
+    }
+    
+    // Toggle selected slot class for visual feedback (different from color selection)
+    Array.from(modalActiveGrid.querySelectorAll('.color-swatch')).forEach((el) => el.classList.remove('is-selected'));
+    swatch.classList.add('is-selected');
+  };
+
+  const onModalDefaultGridClick = (e) => {
+    const swatch = e.target.closest('.color-swatch');
+    if (!swatch) return;
+    const hex = swatch.getAttribute('data-color');
+    if (!hex) return;
+    
+    // Handle color with potential alpha
+    let colorForDrawing = hex;
+    let alphaValue = 1;
+    
+    // Check if hex has alpha (9 characters: #RRGGBBAA)
+    if (hex.length === 9 && hex.startsWith('#')) {
+      const alphaHex = hex.slice(7, 9);
+      alphaValue = parseInt(alphaHex, 16) / 255;
+      
+      // Convert to RGBA format for drawing if it has transparency
+      if (alphaValue < 1) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        colorForDrawing = `rgba(${r}, ${g}, ${b}, ${alphaValue})`;
+      }
+    }
+    
+    // Set as active color for drawing
+    toolHandler.setColor(colorForDrawing);
+    
+    // Update color chip with alpha support
+    if (colorChip) {
+      if (alphaValue < 1) {
+        colorChip.style.background = `
+          repeating-conic-gradient(#c0c0c0 0% 25%, transparent 0% 50%) 50% / 4px 4px,
+          ${hex}
+        `;
+      } else {
+        colorChip.style.background = hex;
+      }
+    }
+    
+    store.setState({ 
+      currentColor: hex,
+      currentColorAlpha: alphaValue
+    });
+    
+    // Update input with selected color
+    if (modalInput) modalInput.value = hex;
+    
+    // Update visual selection in both grids
+    updateColorSelection(hex);
+  };
+
+  const onModalAddBtnClick = () => {
+    const hex = modalInput?.value || '';
+    if (!colorManager.isValidHex(hex)) return;
+    
+    const normalizedHex = colorManager.normalizeHex(hex);
+    const selectedSlot = colorManager.getSelectedSlot();
+    const success = colorManager.addCustomColor(hex, selectedSlot);
+    
+    if (success) {
+      // Set the newly added color as active color for drawing
+      toolHandler.setColor(normalizedHex);
+      if (colorChip) colorChip.style.background = normalizedHex;
+      store.setState({ currentColor: normalizedHex });
+      
+      // Update input value to normalized hex
+      if (modalInput) modalInput.value = normalizedHex;
+      
+      renderPopoverFromPalette();
+      openColorEditor();
+      
+      // Update visual selection after re-rendering
+      updateColorSelection(normalizedHex);
+    }
+  };
 
   const onKeydown = event => {
     // Normalizar las teclas cuando se presiona CapsLock / Mayus
@@ -321,6 +595,11 @@ import { initSupport } from './utils/supports';
       return; // Don't process input clicks, only label clicks
     }
 
+    // For color tool, prevent the default radio toggle and manage checked manually
+    if (toolTarget.id === TOOL_COLOR_ID) {
+      e.preventDefault();
+    }
+
     const selectedToolId = toolHandler.currentTool;
     const isCurrentSelected = selectedToolId === toolTarget.id;
 
@@ -341,7 +620,6 @@ import { initSupport } from './utils/supports';
     if (isCurrentSelected) {
       return;
     }
-
     // Set the new tool (includes color menu special-case)
     onSetTool(toolTarget.id, toolTarget.querySelector('input'));
 
@@ -350,6 +628,7 @@ import { initSupport } from './utils/supports';
       const map = {
         'btn-click': 'neutral',
         'btn-brush': 'brush',
+        'btn-laser': 'laser',
         'btn-eraser': 'eraser',
         'btn-rectangle': 'rectangle',
         'btn-triangle': 'triangle',
@@ -385,6 +664,11 @@ import { initSupport } from './utils/supports';
         store.setState({ isPanning: true, cursor: CURSOR_TYPE.GRABBING });
         // Use infinite canvas panning directly
         infiniteCanvas.startPan(e.clientX, e.clientY);
+      } else if (toolHandler.currentTool === TOOL_LASER_ID) {
+        // Handle laser pointer - start new drawing session
+        store.setState({ isDrawing: true });
+        const worldPos = toolHandler.getMousePosition(e);
+        laserPointer.startLaserDrawing(worldPos, '#ff0000');
       } else if (toolHandler.currentTool === TOOL_CLICK_ID) {
         store.setState({ isPanning: true, cursor: CURSOR_TYPE.GRABBING });
         toolHandler.preparingTheBrush(e);
@@ -402,6 +686,10 @@ import { initSupport } from './utils/supports';
       // Handle temporary panning directly with infinite canvas
       if (isTemporaryPanning && isPanning) {
         infiniteCanvas.updatePan(e.clientX, e.clientY);
+      } else if (toolHandler.currentTool === TOOL_LASER_ID && isDrawing) {
+        // Handle laser pointer drag - add points to current segment
+        const worldPos = toolHandler.getMousePosition(e);
+        laserPointer.addLaserPoint(worldPos);
       } else {
         toolHandler.useTool(e);
       }
@@ -439,10 +727,17 @@ import { initSupport } from './utils/supports';
           store.setState({ isPanning: false, cursor: cursorType });
         }
       } else if (isDrawing) {
-        // Normal drawing
-        toolHandler.finishDrawing();
-        // All drawing (strokes and shapes) is now handled automatically in infiniteCanvas
-        store.setState({ isDrawing: false, hasHistory: Symbol(true) });
+        // Check if it's laser tool
+        if (toolHandler.currentTool === TOOL_LASER_ID) {
+          // Laser drawing finished - end session
+          laserPointer.endLaserDrawing();
+          store.setState({ isDrawing: false });
+        } else {
+          // Normal drawing
+          toolHandler.finishDrawing();
+          // All drawing (strokes and shapes) is now handled automatically in infiniteCanvas
+          store.setState({ isDrawing: false, hasHistory: Symbol(true) });
+        }
       }
     }
   };
@@ -670,246 +965,11 @@ import { initSupport } from './utils/supports';
       addEventListener(colorModalClose, EVENTS.CLICK, onCloseColorSettings),
       addEventListener(colorModalOverlay, EVENTS.CLICK, onCloseColorSettings),
       // Defaults grid: clicking sets color as active (NO auto-add to custom palette)
-      addEventListener(modalDefaultGrid, EVENTS.CLICK, (e) => {
-        const swatch = e.target.closest('.color-swatch');
-        if (!swatch) return;
-        const hex = swatch.getAttribute('data-color');
-        if (!hex) return;
-        
-        // Handle color with potential alpha
-        let colorForDrawing = hex;
-        let alphaValue = 1;
-        
-        // Check if hex has alpha (9 characters: #RRGGBBAA)
-        if (hex.length === 9 && hex.startsWith('#')) {
-          const alphaHex = hex.slice(7, 9);
-          alphaValue = parseInt(alphaHex, 16) / 255;
-          
-          // Convert to RGBA format for drawing if it has transparency
-          if (alphaValue < 1) {
-            const r = parseInt(hex.slice(1, 3), 16);
-            const g = parseInt(hex.slice(3, 5), 16);
-            const b = parseInt(hex.slice(5, 7), 16);
-            colorForDrawing = `rgba(${r}, ${g}, ${b}, ${alphaValue})`;
-          }
-        }
-        
-        // Set as active color for drawing
-        toolHandler.setColor(colorForDrawing);
-        
-        // Update color chip with alpha support
-        if (colorChip) {
-          if (alphaValue < 1) {
-            colorChip.style.background = `
-              repeating-conic-gradient(#c0c0c0 0% 25%, transparent 0% 50%) 50% / 4px 4px,
-              ${hex}
-            `;
-          } else {
-            colorChip.style.background = hex;
-          }
-        }
-        
-        store.setState({ 
-          currentColor: hex,
-          currentColorAlpha: alphaValue
-        });
-        
-        // Update input with selected color
-        if (modalInput) modalInput.value = hex;
-        
-        // Update visual selection in both grids
-        updateColorSelection(hex);
-      }),
+      addEventListener(modalDefaultGrid, EVENTS.CLICK, onModalDefaultGridClick),
       // Active grid selection
-      addEventListener(modalActiveGrid, EVENTS.CLICK, (e) => {
-        const actionBtn = e.target.closest('.swatch-action');
-        const swatch = e.target.closest('.color-swatch');
-        if (!swatch) return;
-        const idx = Number(swatch.getAttribute('data-index'));
-        if (Number.isNaN(idx)) return;
-        
-        // If pressed a specific action
-        if (actionBtn) {
-          const action = actionBtn.getAttribute('data-action');
-          
-          if (action === 'remove') {
-            if (colorManager.removeCustomColor(idx)) {
-              renderPopoverFromPalette();
-              openColorEditor();
-            }
-            return;
-          }
-          
-          if (action === 'edit') {
-            // Open custom color picker for editing
-            const { custom } = colorManager.getColorPalette();
-            const hex = custom[idx] || '#000000';
-            
-            // Set up event listeners for OKLCH Web Component
-            const handleColorConfirm = (e) => {
-              const newColor = e.detail.color;
-              const oklchData = e.detail.oklch;
-              const colorSpace = e.detail.colorSpace;
-              const formats = e.detail.formats;
-              const gamutInfo = e.detail.gamut;
-              
-              console.log('OKLCH Color confirmed:', { color: newColor, oklch: oklchData, colorSpace, formats, gamutInfo });
-              
-              // Use the best color format that includes alpha
-              let colorForDrawing = newColor;
-              let colorForDisplay = newColor;
-              
-              // If there's alpha, use RGBA format for drawing and display
-              if (oklchData.a < 1) {
-                // Try to get RGBA format from ColorManager
-                try {
-                  const rgbaColor = formats?.rgb;
-                  if (rgbaColor && rgbaColor.r !== undefined) {
-                    colorForDrawing = `rgba(${Math.round(rgbaColor.r * 255)}, ${Math.round(rgbaColor.g * 255)}, ${Math.round(rgbaColor.b * 255)}, ${oklchData.a})`;
-                    colorForDisplay = colorForDrawing;
-                  } else if (formats?.serialized?.rgb) {
-                    colorForDrawing = formats.serialized.rgb;
-                    colorForDisplay = colorForDrawing;
-                  } else {
-                    // Fallback: use hex with alpha
-                    colorForDrawing = newColor;
-                    colorForDisplay = newColor;
-                  }
-                } catch (error) {
-                  console.warn('Failed to get RGBA format, using hex:', error);
-                  colorForDrawing = newColor;
-                  colorForDisplay = newColor;
-                }
-              }
-              
-              // Update the color in the custom palette (store the full hex with alpha)
-              const { custom: currentCustom } = colorManager.getColorPalette();
-              const updatedCustom = [...currentCustom];
-              updatedCustom[idx] = newColor; // Store the hex (with alpha if present)
-              
-              // Update store
-              store.setState({ colorPalette: { custom: updatedCustom } });
-              
-              // Set as active color for drawing (use format with alpha)
-              toolHandler.setColor(colorForDrawing);
-              
-              // Update color chip with proper alpha support
-              if (colorChip) {
-                // Set up checkerboard background and color overlay for alpha
-                if (oklchData.a < 1) {
-                  colorChip.style.background = `
-                    repeating-conic-gradient(#c0c0c0 0% 25%, transparent 0% 50%) 50% / 4px 4px,
-                    ${colorForDisplay}
-                  `;
-                } else {
-                  colorChip.style.background = colorForDisplay;
-                }
-              }
-              
-              // Store current color with alpha information
-              store.setState({ 
-                currentColor: newColor,
-                currentColorAlpha: oklchData.a,
-                currentColorFormats: formats
-              });
-              
-              // Update input with new color
-              if (modalInput) modalInput.value = newColor;
-              
-              // Re-render UI
-              renderPopoverFromPalette();
-              openColorEditor();
-              
-              // Update visual selection
-              updateColorSelection(newColor);
-              
-              // Clean up event listeners
-              oklchColorPicker.removeEventListener('colorconfirm', handleColorConfirm);
-              oklchColorPicker.removeEventListener('colorcancel', handleColorCancel);
-            };
-            
-            const handleColorCancel = () => {
-              console.log('OKLCH Color picker cancelled');
-              // Clean up event listeners
-              oklchColorPicker.removeEventListener('colorconfirm', handleColorConfirm);
-              oklchColorPicker.removeEventListener('colorcancel', handleColorCancel);
-            };
-            
-            // Add event listeners
-            oklchColorPicker.addEventListener('colorconfirm', handleColorConfirm);
-            oklchColorPicker.addEventListener('colorcancel', handleColorCancel);
-            
-            // Wait for component to be defined and then open
-            customElements.whenDefined('oklch-color-picker').then(() => {
-              console.log('OKLCH component is now defined');
-              // Ensure upgrade for elements created before definition
-              if (customElements.upgrade) {
-                try { customElements.upgrade(oklchColorPicker); } catch (_) {}
-              }
-              if (typeof oklchColorPicker.open === 'function') {
-                oklchColorPicker.open(hex);
-              } else {
-                // Fallback to attributes
-                if (hex && colorManager.isValidHex(hex)) {
-                  oklchColorPicker.setAttribute('initial-color', hex);
-                }
-                oklchColorPicker.setAttribute('open', '');
-              }
-            }).catch(err => {
-              console.error('Error waiting for OKLCH component:', err);
-            });
-            
-            // Also mark as selected slot for visual feedback
-            colorManager.setSelectedSlot(idx);
-            if (modalInput) modalInput.value = hex;
-          }
-        } else {
-          // Regular click on color swatch - set as active color AND select slot
-          const hex = swatch.getAttribute('data-color');
-          if (hex) {
-            // Set as active color for drawing
-            toolHandler.setColor(hex);
-            if (colorChip) colorChip.style.background = hex;
-            store.setState({ currentColor: hex });
-            
-            // Update input with selected color
-            if (modalInput) modalInput.value = hex;
-            
-            // Update visual selection in both grids
-            updateColorSelection(hex);
-          }
-          colorManager.setSelectedSlot(idx);
-        }
-        
-        // Toggle selected slot class for visual feedback (different from color selection)
-        Array.from(modalActiveGrid.querySelectorAll('.color-swatch')).forEach((el) => el.classList.remove('is-selected'));
-        swatch.classList.add('is-selected');
-      }),
+      addEventListener(modalActiveGrid, EVENTS.CLICK, onModalActiveGridClick),
       // Add/replace via input
-      addEventListener(modalAddBtn, EVENTS.CLICK, () => {
-        const hex = modalInput?.value || '';
-        if (!colorManager.isValidHex(hex)) return;
-        
-        const normalizedHex = colorManager.normalizeHex(hex);
-        const selectedSlot = colorManager.getSelectedSlot();
-        const success = colorManager.addCustomColor(hex, selectedSlot);
-        
-        if (success) {
-          // Set the newly added color as active color for drawing
-          toolHandler.setColor(normalizedHex);
-          if (colorChip) colorChip.style.background = normalizedHex;
-          store.setState({ currentColor: normalizedHex });
-          
-          // Update input value to normalized hex
-          if (modalInput) modalInput.value = normalizedHex;
-          
-          renderPopoverFromPalette();
-          openColorEditor();
-          
-          // Update visual selection after re-rendering
-          updateColorSelection(normalizedHex);
-        }
-      }),
+      addEventListener(modalAddBtn, EVENTS.CLICK, onModalAddBtnClick),
       // Validate input enabling
       addEventListener(modalInput, 'input', () => {
         if (!modalAddBtn) return;
@@ -965,15 +1025,25 @@ import { initSupport } from './utils/supports';
 
   const initHistoryTools = () => {
     onRemoveHistoryListener.trigger();
+    
+    // Initialize history buttons
     const redoId = btnRedo.id;
     const undoId = btnUndo.id;
     btnRedo.insertAdjacentHTML('beforeend', TOOL_ICON[redoId]);
     btnUndo.insertAdjacentHTML('beforeend', TOOL_ICON[undoId]);
 
-    // Negacion en los "disabled", porque cuando es "true" NO tiene que desabilitarse
+    // Initialize zoom buttons
+    const zoomInId = btnZoomIn.id;
+    const zoomOutId = btnZoomOut.id;
+    btnZoomIn.insertAdjacentHTML('beforeend', TOOL_ICON[zoomInId]);
+    btnZoomOut.insertAdjacentHTML('beforeend', TOOL_ICON[zoomOutId]);
+
+    // Add event listeners for both history and zoom controls
     onRemoveHistoryListener.once(
       addEventListener(btnRedo, EVENTS.CLICK, onRedo),
-      addEventListener(btnUndo, EVENTS.CLICK, onUndo)
+      addEventListener(btnUndo, EVENTS.CLICK, onUndo),
+      addEventListener(btnZoomIn, EVENTS.CLICK, onZoomIn),
+      addEventListener(btnZoomOut, EVENTS.CLICK, onZoomOut)
     );
   };
 
@@ -1017,14 +1087,4 @@ import { initSupport } from './utils/supports';
     // DOM is already loaded
     init();
   }
-
-  // Toggle popover on color button press
-  // Note: Opening is handled in onSetTool when selecting TOOL_COLOR_ID
-
-  // Close popover on outside click
-  // document.addEventListener('click', (e) => {
-  //   if (!colorPopover || colorPopover.classList.contains('hidden')) return;
-  //   const isInside = e.target.closest('#color-popover') || e.target.closest('#btn-color');
-  //   if (!isInside) colorPopover.classList.add('hidden');
-  // });
 })();

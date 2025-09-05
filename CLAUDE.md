@@ -29,6 +29,7 @@ Paint Ease is a vanilla JavaScript paint application built with Vite. It feature
 - **Performance optimizations:** `_proxyCache`, `_pathCache`, batch updates with `_batchUpdate`
 - **CRITICAL:** Subscriptions work on **primitive properties only**, not objects. Use `store.subscribe('camera.zoom', callback)`, not `store.subscribe('camera', callback)`
 - **Known issues:** `_pathCache` uses only local property name (collision risk), `setState` batch notifications use mutated state for `oldValue`
+- **Recent fixes:** Color button toggle state correctly managed - button visual state now properly syncs with popover visibility
 
 **History Systems:**
 - `src/lib/history.js` - **Legacy:** Compressed ImageData with Pako (default limit: 12 entries)
@@ -41,6 +42,7 @@ Paint Ease is a vanilla JavaScript paint application built with Vite. It feature
 - Instantiates `Canvas`, `InfiniteCanvas`, `ToolsHandler`, state store
 - Manages all event listeners (keyboard, pointer, resize, tool clicks)
 - Handles tool switching, cursor updates, undo/redo coordination between both systems
+- **Color palette management:** Special handling for color button toggle state and popover visibility
 
 **Drawing Engine (`src/lib/toolsHandler.js` + `src/lib/draw.js`):**
 - `ToolsHandler`: calculates pointer coordinates (corrects for zoom/brush size), accumulates points for smoothing
@@ -67,6 +69,7 @@ Paint Ease is a vanilla JavaScript paint application built with Vite. It feature
 - **Triangle** - Isosceles triangle
 - **Eraser** - Uses `globalCompositeOperation: 'destination-out'`
 - **Trash** - Clear entire canvas
+- **Color Palette** - Toggle color popover with special button state management
 
 **Advanced Drawing Modes (New System Only):**
 - **Straight line mode:** `Ctrl/Cmd + Alt` - 360° straight lines
@@ -122,10 +125,14 @@ Key state properties in `store` (AppGlobalState):
 - `setState` batch notifications use mutated state for `oldValue`
 
 **Features Missing:**
-- Color picker UI (values hardcoded in `ToolsHandler`)
 - Zoom/pan implementation incomplete (only cursor feedback)
 - RoughJS integration (installed but unused)
 - Touch gesture support for pan/zoom
+
+**UI Features Working:**
+- Color palette with toggle functionality and proper visual state management
+- Color popover with modal editor for custom colors
+- Automatic popover closing when clicking outside
 
 **Performance:**
 - History stores full ImageData frames (memory intensive for large canvases)
@@ -232,3 +239,134 @@ useTool = e => {
   }
 };
 ```
+
+**Color button toggle state management (main.js:119-131):**
+```javascript
+const onSetTool = (toolUpdated, target) => {
+  // Special case: open color palette, do not change cursor/tool
+  if (toolUpdated === TOOL_COLOR_ID) {
+    const isCurrentlyHidden = colorPopover?.classList.contains('hidden');
+    // Toggle popover visibility
+    colorPopover?.classList.toggle('hidden');
+    // While popover is open, mark button as active (checked). When closing, uncheck
+    const shouldBeChecked = Boolean(isCurrentlyHidden);
+    if (target) target.checked = shouldBeChecked;
+    return;
+  }
+  // ... rest of tool handling
+};
+```
+
+**Why this matters:** The color button uses a special toggle pattern where the radio button's checked state must manually sync with the popover's visibility. Standard radio button behavior would interfere with the toggle functionality.
+
+**Color popover auto-close on outside clicks (main.js:361-374):**
+```javascript
+const onPointerDown = e => {
+  // Only handle canvas clicks, not toolbar clicks
+  if (!e.target.closest('#canvas')) {
+    return;
+  }
+  if (!colorPopover.classList.contains('hidden')) {
+    const isInside = e.target.closest('#color-popover') || e.target.closest('#btn-color');
+    if (!isInside) {
+      const colorRadio = colorButton?.querySelector('input[type="radio"]');
+      if (colorRadio) colorRadio.checked = false;
+      colorPopover.classList.add('hidden');
+    }
+  }
+  // ... rest of pointer handling
+};
+```
+
+**Color selection handling - auto-close after color pick (main.js:508-513):**
+```javascript
+// Uncheck the color tool radio to remove active style
+const colorRadio = colorButton?.querySelector('input[type="radio"]');
+if (colorRadio) colorRadio.checked = false;
+colorPopover?.classList.add('hidden');
+```
+
+**Event handling for color tool to prevent double-click issues (main.js:315-323):**
+```javascript
+// Prevent double execution for color tool due to event bubbling
+// Only process clicks on the label itself, not on the input inside
+if (toolTarget.id === TOOL_COLOR_ID && rawTarget.tagName === 'INPUT') {
+  return; // Don't process input clicks, only label clicks
+}
+
+// For color tool, prevent the default radio toggle and manage checked manually
+if (toolTarget.id === TOOL_COLOR_ID) {
+  e.preventDefault();
+}
+```
+
+## Event Listener Best Practices
+
+### **CRITICAL: No Inline Callbacks Pattern**
+
+**❌ WRONG - Inline callbacks that redefine on every execution:**
+```javascript
+addEventListener(element, 'click', (e) => {
+  // Complex logic here...
+  // This callback is recreated every time addEventListeners() is called
+  // causing memory leaks and performance issues
+});
+```
+
+**✅ CORRECT - Named functions defined in events section:**
+```javascript
+// In events section
+const onElementClick = (e) => {
+  // Complex logic here...
+  // Function is defined once and reused
+};
+
+// In addEventListeners()
+addEventListener(element, 'click', onElementClick);
+```
+
+**Why this matters:** Inline callbacks are recreated every time `addEventListeners()` is called, leading to memory leaks and performance degradation. Named functions are defined once and reused.
+
+### **Event Listener Management with Emitters**
+
+**Automatic cleanup pattern using `onRemoveEventListeners.once()`:**
+```javascript
+const addEventListeners = () => {
+  removeEventListeners(); // Clean up previous listeners
+  
+  onRemoveEventListeners.once(
+    addEventListener(element1, 'click', onElement1Click),
+    addEventListener(element2, 'input', onElement2Input),
+    addEventListener(element3, 'blur', onElement3Blur),
+    // All listeners are automatically cleaned up when removeEventListeners() is called
+  );
+};
+```
+
+### **Recently Refactored Event Handlers**
+
+The following event handlers have been refactored from inline callbacks to named functions:
+
+**Modal Active Grid Click Handler (main.js:296-328):**
+- `onModalActiveGridClick` - Handles custom color grid interactions
+- `onModalActiveGridRemove` - Removes custom colors
+- `onModalActiveGridEdit` - Opens color picker for editing
+- `onModalActiveGridColorSelect` - Sets selected color as active
+
+**Modal Default Grid Click Handler (main.js:330-379):**
+- `onModalDefaultGridClick` - Handles default color grid selections with alpha support
+
+**Modal Add Button Click Handler (main.js:381-404):**
+- `onModalAddBtnClick` - Adds new custom colors to palette
+
+**Color Picker Event Management:**
+- Uses `onRemoveColorPickerListeners` emitter for automatic cleanup
+- Eliminates redundant `handleColorCancel` callbacks
+- Manages OKLCH color picker event lifecycle properly
+
+### **Performance Benefits Achieved**
+
+1. **Memory Management:** No callback recreation on each `addEventListeners()` call
+2. **Better Cleanup:** Automatic event listener removal with emitter pattern
+3. **Modular Code:** Event handlers can be tested and reused independently
+4. **Maintainability:** Clear separation between event logic and listener registration

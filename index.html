@@ -85,11 +85,19 @@
                     <path d="M10.6 9a9 9 0 0 1 4.4 4.4" />
                   </svg>
                 </label>
+                <label id="btn-laser" class="control-button btn tooltip-container" tabindex="15">
+                  <div class="tooltip">Laser Pointer (Ctrl+3)</div>
+                  <input type="radio" name="tool" value="laser pointer tool" aria-labelledby="btn-laser"
+                    aria-label="Laser pointer tool, show laser lines" aria-keyshortcuts="3" />
+                  <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor">
+                    <path d="M360-80q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35Zm179-139q-6-55-41-97t-87-57l106-107H236q-32 0-54-22t-22-54q0-20 10.5-37.5T198-622l486-291q18-11 38-5.5t31 23.5q11 18 5.5 37.5T736-827L360-600h364q32 0 54 22t22 54q0 18-4.5 35.5T778-458L539-219Z"/>
+                  </svg>
+                </label>
                 <div class="toolbar-driver"></div>
                 <label id="btn-rectangle" class="control-button btn tooltip-container" tabindex="4">
-                  <div class="tooltip">Rectangle (Ctrl+3)</div>
+                  <div class="tooltip">Rectangle (Ctrl+4)</div>
                   <input type="radio" name="tool" value="draw rectangle tool" aria-labelledby="btn-rectangle"
-                    aria-label="Brush rectangle tool, start drawing rectangles" aria-keyshortcuts="3" />
+                    aria-label="Brush rectangle tool, start drawing rectangles" aria-keyshortcuts="4" />
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -97,9 +105,9 @@
                   </svg>
                 </label>
                 <label id="btn-triangle" class="control-button btn tooltip-container" tabindex="5">
-                  <div class="tooltip">Triangle (Ctrl+4)</div>
+                  <div class="tooltip">Triangle (Ctrl+5)</div>
                   <input type="radio" name="tool" value="draw triangle tool" aria-labelledby="btn-triangle"
-                    aria-label="Brush triangle tool, start drawing triangles" aria-keyshortcuts="4" />
+                    aria-label="Brush triangle tool, start drawing triangles" aria-keyshortcuts="5" />
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -108,9 +116,9 @@
                   </svg>
                 </label>
                 <label id="btn-circle" class="control-button btn tooltip-container" tabindex="6">
-                  <div class="tooltip">Circle (Ctrl+5)</div>
+                  <div class="tooltip">Circle (Ctrl+6)</div>
                   <input type="radio" name="tool" value="draw circle tool" aria-labelledby="btn-circle"
-                    aria-label="Brush circle tool, start drawing circles" aria-keyshortcuts="5" />
+                    aria-label="Brush circle tool, start drawing circles" aria-keyshortcuts="6" />
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -119,9 +127,9 @@
                 </label>
                 <div class="toolbar-driver"></div>
                 <label id="btn-eraser" class="control-button btn tooltip-container" tabindex="7">
-                  <div class="tooltip">Eraser (Ctrl+6)</div>
+                  <div class="tooltip">Eraser (Ctrl+7)</div>
                   <input type="radio" name="tool" value="eraser tool" aria-labelledby="btn-eraser"
-                    aria-label="Eraser tool" aria-keyshortcuts="6" />
+                    aria-label="Eraser tool" aria-keyshortcuts="7" />
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -184,12 +192,20 @@
           class="size-full transition-transform ease-in-out duration-500 custom-cursor-default !pointer-events-none fixed-pointer-container">
           <section class="grid grid-flow-row grid-cols-[auto] grid-auto-rows-min fixed-pointer-container gap-8">
             <h2 class="visually-hidden">Board actions</h2>
-            <div class="absolute bottom-0 right-[2%]">
+            <div class="absolute bottom-0 left-[2%]">
               <div id="history-controls" class="w-auto flex bg-gray-200 rounded-xl custom-cursor-default" tabindex="9">
                 <button id="btn-undo" class="control-button btn" label="Undo" aria-label="History undo" disabled
                   tabindex="10"></button>
                 <button id="btn-redo" class="control-button btn" label="Redo" aria-label="History redo" disabled
                   tabindex="11"></button>
+              </div>
+            </div>
+            <div class="absolute bottom-0 right-[2%]">
+              <div id="zoom-controls" class="w-auto flex bg-gray-200 rounded-xl custom-cursor-default" tabindex="12">
+                <button id="zoom-in" class="control-button btn" label="Zoom In" aria-label="Zoom in" 
+                tabindex="13"></button>
+              <button id="zoom-out" class="control-button btn" label="Zoom Out" aria-label="Zoom out" 
+                tabindex="14"></button>
               </div>
             </div>
           </section>

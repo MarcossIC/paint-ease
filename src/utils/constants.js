@@ -9,6 +9,9 @@ const TRASH_ICON = `<svg width="${ICON_SIZE}" height="${ICON_SIZE}" viewBox="0 0
 const CLICK_ICON = `<svg width="${ICON_SIZE}" height="${ICON_SIZE}" viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12l3 0" /><path d="M12 3l0 3" /><path d="M7.8 7.8l-2.2 -2.2" /><path d="M16.2 7.8l2.2 -2.2" /><path d="M7.8 16.2l-2.2 2.2" /><path d="M12 12l9 3l-4 2l-2 4l-3 -9" /></svg>`;
 const UNDO_ICON = `<svg width="${ICON_SIZE_MD}" height="${ICON_SIZE_MD}"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4" /><path d="M5 10h11a4 4 0 1 1 0 8h-1" /></svg>`;
 const REDO_ICON = `<svg width="${ICON_SIZE_MD}" height="${ICON_SIZE_MD}" viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 14l4 -4l-4 -4" /><path d="M19 10h-11a4 4 0 1 0 0 8h1" /></svg>`;
+const ZOOM_IN_ICON = `<svg width="${ICON_SIZE_MD}" height="${ICON_SIZE_MD}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M7 10l6 0" /><path d="M10 7l0 6" /><path d="M21 21l-6 -6" /></svg>`;
+const ZOOM_OUT_ICON = `<svg width="${ICON_SIZE_MD}" height="${ICON_SIZE_MD}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M7 10l6 0" /><path d="M21 21l-6 -6" /></svg>`;
+const LASER_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="${ICON_SIZE}px" viewBox="0 -960 960 960" width="${ICON_SIZE}px" fill="currentColor"><path d="M360-80q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35Zm179-139q-6-55-41-97t-87-57l106-107H236q-32 0-54-22t-22-54q0-20 10.5-37.5T198-622l486-291q18-11 38-5.5t31 23.5q11 18 5.5 37.5T736-827L360-600h364q32 0 54 22t22 54q0 18-4.5 35.5T778-458L539-219Z"/></svg>`;
 export const TOOL_CLICK_ID = 'btn-click';
 export const TOOL_BRUSH_ID = 'btn-brush';
 export const TOOL_RECTANGLE_ID = 'btn-rectangle';
@@ -19,6 +22,9 @@ export const TOOL_TRASH_ID = 'btn-trash-board';
 export const TOOL_COLOR_ID = 'btn-color';
 export const TOOL_UNDO_ID = 'btn-undo';
 export const TOOL_REDO_ID = 'btn-redo';
+export const ZOOM_IN_ID = 'zoom-in';
+export const ZOOM_OUT_ID = 'zoom-out';
+export const TOOL_LASER_ID = 'btn-laser';
 
 export const TOOL_ICON = {
   [TOOL_BRUSH_ID]: BRUSH_ICON,
@@ -30,6 +36,9 @@ export const TOOL_ICON = {
   [TOOL_CLICK_ID]: CLICK_ICON,
   [TOOL_UNDO_ID]: UNDO_ICON,
   [TOOL_REDO_ID]: REDO_ICON,
+  [ZOOM_IN_ID]: ZOOM_IN_ICON,
+  [ZOOM_OUT_ID]: ZOOM_OUT_ICON,
+  [TOOL_LASER_ID]: LASER_ICON,
 };
 
 export const EVENTS = {
@@ -53,6 +62,8 @@ export const EVENTS = {
   LOAD: 'load',
   CLICK: 'click',
   CHANGE: 'change',
+  WHEEL: 'wheel',
+  SCROLL: 'scroll',
 };
 
 export const isDarwin = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
@@ -129,6 +140,7 @@ export const CURSOR_TYPE = {
   MOVE: 'move',
   AUTO: '',
   ERASER: `url("${import.meta.env.BASE_URL || './'}cursors/eraser.webp") 15 15, auto`,
+  LASER: `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" fill="red" opacity="0.8"/><circle cx="12" cy="12" r="1" fill="white"/></svg>')}") 12 12, crosshair`,
   UNAVAILABLE: `var(--unavalaible-cursor)`,
 };
 
@@ -137,6 +149,7 @@ export const TOOL_CURSOR_MAP = {
   [TOOL_ERASER_ID]: CURSOR_TYPE.ERASER,
   [TOOL_TRASH_ID]: null,
   [TOOL_COLOR_ID]: null,
+  [TOOL_LASER_ID]: CURSOR_TYPE.LASER,
   default: CURSOR_TYPE.CROSSHAIR,
 };
 
