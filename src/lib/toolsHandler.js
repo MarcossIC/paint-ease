@@ -22,7 +22,16 @@ export default class ToolsHandler {
     this._toolSetting = {
       color: '#000000',
       paddingColor: 'transparent',
+      // visual stroke width
       size: 4,
+      // fill on/off for shapes
+      isPaddingOn: false,
+      // corner radius for rectangles
+      cornerRadius: 0,
+      // 'solid' | 'dashed' | 'dotted'
+      lineStyle: 'solid',
+      // opacity for shapes (0-100 percentage)
+      opacity: 100,
       currentTool: defaultTool,
     };
   }
@@ -158,6 +167,36 @@ export default class ToolsHandler {
     }
   }
 
+  // ---------- Shape/Stroke configuration setters (used by UI) ----------
+
+  setStrokeWidth(width) {
+    const w = Math.max(1, Math.min(20, Number(width) || 1));
+    this._toolSetting.size = w;
+  }
+
+  setFillShape(fill) {
+    const v = Boolean(fill);
+    this._toolSetting.isPaddingOn = v;
+    this._toolState.isPaddingOn = v;
+  }
+
+  setFillColor(hexColor) {
+    if (typeof hexColor === 'string' && hexColor) {
+      this._toolSetting.paddingColor = hexColor;
+    }
+  }
+
+  setCornerRadius(radius) {
+    const r = Math.max(0, Math.min(50, Number(radius) || 0));
+    this._toolSetting.cornerRadius = r;
+  }
+
+  setLineStyle(style) {
+    if (style === 'solid' || style === 'dashed' || style === 'dotted') {
+      this._toolSetting.lineStyle = style;
+    }
+  }
+
   startPanning(e) {
     const { panOffsetX, panOffsetY } = store.getState();
     const { left, top } = this._infiniteCanvas.canvas.getBoundingClientRect();
@@ -216,5 +255,70 @@ export default class ToolsHandler {
   handleZoom(e, deltaY) {
     const zoomFactor = deltaY > 0 ? 0.9 : 1.1;
     this._infiniteCanvas.zoom(e.clientX, e.clientY, zoomFactor);
+  }
+
+  // ========== SHAPES CONFIGURATION SETTERS ==========
+
+  /**
+   * Set stroke width for shapes
+   * @param {number} width - Width in pixels
+   */
+  setStrokeWidth(width) {
+    this._toolSetting.size = Number(width);
+  }
+
+  /**
+   * Set fill shape setting
+   * @param {boolean} fill - Whether to fill shapes
+   */
+  setFillShape(fill) {
+    this._toolSetting.isPaddingOn = Boolean(fill);
+  }
+
+  /**
+   * Set fill color for shapes
+   * @param {string} color - Hex color string
+   */
+  setFillColor(color) {
+    this._toolSetting.paddingColor = color;
+  }
+
+  /**
+   * Set corner radius for rectangles
+   * @param {number} radius - Radius in pixels
+   */
+  setCornerRadius(radius) {
+    this._toolSetting.cornerRadius = Number(radius);
+  }
+
+  /**
+   * Set line style for shapes
+   * @param {string} style - Line style ('solid', 'dashed', 'dotted')
+   */
+  setLineStyle(style) {
+    this._toolSetting.lineStyle = style;
+  }
+
+  /**
+   * Set opacity for shapes
+   * @param {number} opacity - Opacity percentage (0-100)
+   */
+  setOpacity(opacity) {
+    this._toolSetting.opacity = Math.max(0, Math.min(100, Number(opacity)));
+  }
+
+  /**
+   * Get current shapes configuration
+   * @returns {object} Current tool settings
+   */
+  getShapesConfig() {
+    return {
+      strokeWidth: this._toolSetting.size,
+      fillShape: this._toolSetting.isPaddingOn,
+      fillColor: this._toolSetting.paddingColor,
+      cornerRadius: this._toolSetting.cornerRadius,
+      lineStyle: this._toolSetting.lineStyle,
+      opacity: this._toolSetting.opacity
+    };
   }
 }

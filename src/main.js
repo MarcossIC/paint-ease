@@ -14,6 +14,7 @@ import {
   ZOOM_IN_ID,
   ZOOM_OUT_ID,
   TOOL_LASER_ID,
+  TOOL_SHAPES_ID,
 } from './utils/constants';
 import { $, $FROM, addEventListener } from './utils/utils';
 import ToolsHandler from './lib/toolsHandler';
@@ -22,6 +23,7 @@ import { LaserPointer } from './lib/laserPointer';
 import { store } from './lib/appState';
 import Emitter from './domain/emitter';
 import ColorManager from './domain/colorManager';
+import ShapesManager from './domain/shapesManager';
 // import { ColorPickerModal } from './components/colorPicker';
 import { OKLCHColorPicker } from './components/OKLCHColorPicker';
 import { KEYS, isActionKey, KEYS_TO_TOOLS } from './utils/keyUtilities';
@@ -52,6 +54,18 @@ import { initSupport } from './utils/supports';
   const modalInput = $('#color-modal-input');
   const modalAddBtn = $('#color-modal-add');
   const modalResetBtn = $('#color-modal-reset');
+  // Shapes tool elements
+  const shapesButton = $('#btn-shapes');
+  const shapesPopover = $('#shapes-popover');
+  const shapesGrid = $('#shapes-grid');
+  const strokeWidthRange = $('#stroke-width-range');
+  const strokeWidthValue = $('#stroke-width-value');
+  const fillGrid = $('#fill-grid');
+  const cornerRadiusRange = $('#corner-radius-range');
+  const cornerRadiusValue = $('#corner-radius-value');
+  const lineStyleGrid = $('.line-style-grid');
+  const shapeOpacityRange = $('#shape-opacity-range');
+  const shapeOpacityValue = $('#shape-opacity-value');
   // Status bar elements
   const statusPos = $('#status-pos');
   const statusTool = $('#status-tool');
@@ -63,6 +77,7 @@ import { initSupport } from './utils/supports';
   // Initialize canvas immediately to ensure sizing and transforms are ready
   infiniteCanvas.init();
   const colorManager = new ColorManager();
+  const shapesManager = new ShapesManager();
   // Create and append Web Component instances (defensive for some browsers)
   let customColorPicker;
   let oklchColorPicker;
@@ -124,6 +139,15 @@ import { initSupport } from './utils/supports';
     colorManager.renderPopoverGrid(colorGrid, colorCount);
   };
 
+  const updateAllColorPalettes = () => {
+    // Update main color popover
+    renderPopoverFromPalette();
+    // Update shapes fill palette if it exists
+    if (fillGrid) {
+      shapesManager.renderFillGrid(fillGrid);
+    }
+  };
+
   const openColorEditor = () => {
     colorManager.clearSlotSelection();
     // Render grids using ColorManager
@@ -155,6 +179,40 @@ import { initSupport } from './utils/supports';
       const shouldBeChecked = Boolean(isCurrentlyHidden);
       if (target) target.checked = shouldBeChecked;
       // if (colorRadio) colorRadio.checked = shouldBeChecked;
+      return;
+    }
+
+    // Special case: open shapes palette, switch to selected shape tool  
+    if (toolUpdated === TOOL_SHAPES_ID) {
+      const isCurrentlyHidden = shapesPopover?.classList.contains('hidden');
+      // Toggle popover visibility
+      shapesPopover?.classList.toggle('hidden');
+      // While popover is open, mark button as active (checked). When closing, uncheck
+      const shouldBeChecked = Boolean(isCurrentlyHidden);
+      if (target) target.checked = shouldBeChecked;
+      
+      // If opening popover, switch to the currently selected shape tool
+      if (isCurrentlyHidden) {
+        const selectedShapeToolId = shapesManager.getSelectedShapeToolId();
+        toolHandler.currentTool = selectedShapeToolId;
+        
+        // Sync all shapes settings with ToolsHandler
+        const config = shapesManager.getShapesConfig();
+        toolHandler.setStrokeWidth(config.strokeWidth);
+        toolHandler.setFillShape(config.fillShape);
+        toolHandler.setFillColor(config.fillColor);
+        toolHandler.setCornerRadius(config.cornerRadius);
+        toolHandler.setLineStyle(config.lineStyle);
+        // Ensure fill palette reflects latest global palette (supports up to 21)
+        // Use a small delay to ensure the DOM is ready and state is updated
+        setTimeout(() => {
+          shapesManager.renderFillGrid(fillGrid);
+        }, 0);
+        
+        // Update cursor based on selected shape
+        const cursorType = TOOL_CURSOR_MAP[selectedShapeToolId] || TOOL_CURSOR_MAP.default;
+        store.setState({ cursor: cursorType });
+      }
       return;
     }
 
@@ -250,7 +308,7 @@ import { initSupport } from './utils/supports';
     if (modalInput) modalInput.value = newColor;
     
     // Re-render UI
-    renderPopoverFromPalette();
+    updateAllColorPalettes();
     openColorEditor();
     
     // Update visual selection
@@ -259,7 +317,7 @@ import { initSupport } from './utils/supports';
 
   const onModalActiveGridRemove = (idx) => {
     if (colorManager.removeCustomColor(idx)) {
-      renderPopoverFromPalette();
+      updateAllColorPalettes();
       openColorEditor();
     }
   };
@@ -422,12 +480,110 @@ import { initSupport } from './utils/supports';
       // Update input value to normalized hex
       if (modalInput) modalInput.value = normalizedHex;
       
-      renderPopoverFromPalette();
+      updateAllColorPalettes();
       openColorEditor();
       
       // Update visual selection after re-rendering
       updateColorSelection(normalizedHex);
     }
+  };
+
+  // ---------- SHAPES EVENT HANDLERS ----------
+
+  const onShapeSelect = (e) => {
+    const shapeOption = e.target.closest('.shape-option');
+    if (!shapeOption) return;
+    
+    const selectedShape = shapeOption.dataset.shape;
+    if (!selectedShape) return;
+    
+    // Update shapes manager
+    shapesManager.setSelectedShape(selectedShape);
+    
+    // Update UI
+    shapesManager.updateShapesGrid(shapesGrid);
+    
+    // Update current tool to match selected shape
+    const selectedShapeToolId = shapesManager.getSelectedShapeToolId();
+    toolHandler.currentTool = selectedShapeToolId;
+    
+    // Sync all shapes settings with ToolsHandler
+    const config = shapesManager.getShapesConfig();
+    toolHandler.setStrokeWidth(config.strokeWidth);
+    toolHandler.setFillShape(config.fillShape);
+    toolHandler.setFillColor(config.fillColor);
+    toolHandler.setCornerRadius(config.cornerRadius);
+    toolHandler.setLineStyle(config.lineStyle);
+    
+    // Update cursor
+    const cursorType = TOOL_CURSOR_MAP[selectedShapeToolId] || TOOL_CURSOR_MAP.default;
+    store.setState({ cursor: cursorType });
+    
+    // Update status tool label
+    if (statusTool) {
+      const toolLabels = {
+        'btn-rectangle': 'rectángulo',
+        'btn-circle': 'círculo', 
+        'btn-triangle-isosceles': 'triángulo isósceles',
+        'btn-triangle-scalene': 'triángulo escaleno',
+        'btn-triangle-equilateral': 'triángulo equilátero'
+      };
+      statusTool.textContent = `Herramienta: ${toolLabels[selectedShapeToolId] || 'forma'}`;
+    }
+  };
+
+  const onStrokeWidthChange = (e) => {
+    const newValue = Number(e.target.value);
+    shapesManager.setStrokeWidth(newValue);
+    // Update tools handler immediately
+    toolHandler.setStrokeWidth(newValue);
+    if (strokeWidthValue) strokeWidthValue.textContent = `${newValue}px`;
+  };
+
+  const onFillPaletteClick = (e) => {
+    const swatch = e.target.closest('.color-swatch');
+    if (!swatch || !fillGrid?.contains(swatch)) return;
+    const value = swatch.getAttribute('data-color');
+    if (value === 'transparent') {
+      shapesManager.setFillShape(false);
+      toolHandler.setFillShape(false);
+    } else if (value) {
+      shapesManager.setFillShape(true);
+      shapesManager.setFillColor(value);
+      toolHandler.setFillShape(true);
+      toolHandler.setFillColor(value);
+    }
+    shapesManager.updateFillGridSelection(fillGrid);
+  };
+
+  const onCornerRadiusChange = (e) => {
+    const newValue = Number(e.target.value);
+    shapesManager.setCornerRadius(newValue);
+    toolHandler.setCornerRadius(newValue);
+    if (cornerRadiusValue) cornerRadiusValue.textContent = `${newValue}px`;
+  };
+
+  const onOpacityChange = (e) => {
+    const newValue = Number(e.target.value);
+    shapesManager.setOpacity(newValue);
+    toolHandler.setOpacity(newValue);
+    if (shapeOpacityValue) shapeOpacityValue.textContent = `${newValue}%`;
+  };
+
+  const onLineStyleSelect = (e) => {
+    const styleOption = e.target.closest('.line-style-option');
+    if (!styleOption) return;
+    
+    const selectedStyle = styleOption.dataset.style;
+    if (!selectedStyle) return;
+    
+    // Update shapes manager
+    shapesManager.setLineStyle(selectedStyle);
+    
+    // Update UI
+    shapesManager.updateLineStyleGrid(lineStyleGrid);
+    // Apply to tool settings
+    toolHandler.setLineStyle(selectedStyle);
   };
 
   const onKeydown = event => {
@@ -589,14 +745,14 @@ import { initSupport } from './utils/supports';
     const toolTarget = rawTarget.closest('label');
     if (!toolTarget || !toolTarget.id) return;
     
-    // Prevent double execution for color tool due to event bubbling
+    // Prevent double execution for special tools due to event bubbling
     // Only process clicks on the label itself, not on the input inside
-    if (toolTarget.id === TOOL_COLOR_ID && rawTarget.tagName === 'INPUT') {
+    if ((toolTarget.id === TOOL_COLOR_ID || toolTarget.id === TOOL_SHAPES_ID) && rawTarget.tagName === 'INPUT') {
       return; // Don't process input clicks, only label clicks
     }
 
     // For color tool, prevent the default radio toggle and manage checked manually
-    if (toolTarget.id === TOOL_COLOR_ID) {
+    if (toolTarget.id === TOOL_COLOR_ID || toolTarget.id === TOOL_SHAPES_ID) {
       e.preventDefault();
     }
 
@@ -630,9 +786,7 @@ import { initSupport } from './utils/supports';
         'btn-brush': 'brush',
         'btn-laser': 'laser',
         'btn-eraser': 'eraser',
-        'btn-rectangle': 'rectangle',
-        'btn-triangle': 'triangle',
-        'btn-circle': 'circle',
+        'btn-shapes': 'shapes',
       };
       statusTool.textContent = `Herramienta: ${map[toolTarget.id] || 'neutral'}`;
     }
@@ -652,6 +806,15 @@ import { initSupport } from './utils/supports';
         const colorRadio = colorButton?.querySelector('input[type="radio"]');
         if (colorRadio) colorRadio.checked = false;
         colorPopover.classList.add('hidden');
+      }
+    }
+    
+    if (!shapesPopover.classList.contains('hidden')) {
+      const isInside = e.target.closest('#shapes-popover') || e.target.closest('#btn-shapes');
+      if (!isInside) {
+        const shapesRadio = shapesButton?.querySelector('input[type="radio"]');
+        if (shapesRadio) shapesRadio.checked = false;
+        shapesPopover.classList.add('hidden');
       }
     }
     
@@ -821,6 +984,10 @@ import { initSupport } from './utils/supports';
     colorManager.clearSlotSelection();
     colorModal?.classList.add('hidden');
     colorModalOverlay?.classList.add('hidden');
+    
+    // Update all color palettes when closing the color modal
+    // This ensures the shapes fill palette reflects any changes made
+    updateAllColorPalettes();
   };
 
   /**
@@ -933,6 +1100,15 @@ import { initSupport } from './utils/supports';
     }
   });
 
+  // Keep Shapes fill palette in sync with any palette changes (defaults or custom)
+  const rerenderFillPaletteFromStore = () => {
+    if (fillGrid) {
+      shapesManager.renderFillGrid(fillGrid);
+    }
+  };
+  store.subscribe('colorPalette.defaults', rerenderFillPaletteFromStore);
+  store.subscribe('colorPalette.custom', rerenderFillPaletteFromStore);
+
   // --------------- EVENT MANAGER / STARTERS ---------------------
 
   const removeEventListeners = () => {
@@ -986,9 +1162,16 @@ import { initSupport } from './utils/supports';
       // Reset to defaults
       addEventListener(modalResetBtn, EVENTS.CLICK, () => {
         colorManager.resetCustomColors();
-        renderPopoverFromPalette();
+        updateAllColorPalettes();
         openColorEditor();
       }),
+      // Shapes event listeners
+      addEventListener(shapesGrid, EVENTS.CLICK, onShapeSelect),
+      addEventListener(strokeWidthRange, 'input', onStrokeWidthChange),
+      addEventListener(fillGrid, EVENTS.CLICK, onFillPaletteClick),
+      addEventListener(cornerRadiusRange, 'input', onCornerRadiusChange),
+      addEventListener(shapeOpacityRange, 'input', onOpacityChange),
+      addEventListener(lineStyleGrid, EVENTS.CLICK, onLineStyleSelect),
       addEventListener(canvasHtml, EVENTS.POINTER_DOWN, onPointerDown),
       addEventListener(canvasHtml, EVENTS.POINTER_MOVE, onPointerMove),
       addEventListener(canvasHtml, EVENTS.POINTER_UP, onPointerStop),
@@ -1072,7 +1255,20 @@ import { initSupport } from './utils/supports';
     const { currentColor } = store.getState();
     if (colorChip) colorChip.style.background = currentColor || '#000000';
     // Build initial color grid from palette (defaults + custom)
-    renderPopoverFromPalette();
+    updateAllColorPalettes();
+    
+    // Initialize shapes manager UI
+    shapesManager.updateShapesGrid(shapesGrid);
+    shapesManager.updateLineStyleGrid(lineStyleGrid);
+    shapesManager.updateRangeInputs({
+      strokeWidthRange,
+      strokeWidthValue,
+      cornerRadiusRange,
+      cornerRadiusValue,
+      opacityRange: shapeOpacityRange,
+      opacityValue: shapeOpacityValue
+    });
+    shapesManager.renderFillGrid(fillGrid);
     
     // Initialize status bar with default values
     if (statusZoom) statusZoom.textContent = 'Zoom: 100%';

@@ -20,8 +20,9 @@ Paint Ease is a vanilla JavaScript paint application built with Vite. It feature
 ### Core Systems
 
 **Dual Canvas Architecture (IN TRANSITION):**
-- `src/lib/canvas.js` - **Legacy system** with ImageData snapshots, `globalCompositeOperation` for eraser
+- `src/legacy/canvas.js` - **Legacy system** with ImageData snapshots, `globalCompositeOperation` for eraser
 - `src/lib/infiniteCanvas.js` - **New system** with world coordinates, camera transforms, performance optimizations
+- `src/lib/laserPointer.js` - **Laser pointer system** with trail effects and animation
 - Both coexist: infinite canvas handles new features, legacy system being phased out
 
 **State Management (`src/lib/appState.js`):**
@@ -32,16 +33,17 @@ Paint Ease is a vanilla JavaScript paint application built with Vite. It feature
 - **Recent fixes:** Color button toggle state correctly managed - button visual state now properly syncs with popover visibility
 
 **History Systems:**
-- `src/lib/history.js` - **Legacy:** Compressed ImageData with Pako (default limit: 12 entries)
-- `src/lib/worldHistory.js` - **New:** World-space element history for infinite canvas
+- `src/legacy/history.js` - **Legacy:** Compressed ImageData with Pako (default limit: 12 entries)  
+- `src/domain/worldHistory.js` - **New:** World-space element history for infinite canvas
 - Both systems track undo/redo independently during transition
 
 ### Key Components
 
 **Main Orchestration (`src/main.js`):**
-- Instantiates `Canvas`, `InfiniteCanvas`, `ToolsHandler`, state store
+- Instantiates `Canvas`, `InfiniteCanvas`, `LaserPointer`, `ToolsHandler`, state store
 - Manages all event listeners (keyboard, pointer, resize, tool clicks)
 - Handles tool switching, cursor updates, undo/redo coordination between both systems
+- **Laser pointer integration:** Manages laser pointer activation and trail rendering
 - **Color palette management:** Special handling for color button toggle state and popover visibility
 
 **Drawing Engine (`src/lib/toolsHandler.js` + `src/lib/draw.js`):**
@@ -51,13 +53,15 @@ Paint Ease is a vanilla JavaScript paint application built with Vite. It feature
 
 **Utilities:**
 - `src/utils/constants.js` - Tool IDs, SVG icons, cursor mappings, events
-- `src/utils/keyUtilities.js` - Keyboard shortcuts with CapsLock normalization
+- `src/utils/keyUtilities.js` - Keyboard shortcuts with CapsLock normalization  
 - `src/utils/utils.js` - DOM helpers, compression/decompression utils
+- `src/utils/supports.js` - Feature detection and color space support
 
 **Domain Layer:**
 - `src/domain/emitter.js` - Simple pub/sub for listener cleanup
 - `src/domain/device.js` - Device abstraction (unused)
 - `src/domain/colorManager.js` - **Color management system:** validation, normalization, palette management, UI rendering, color extraction
+- `src/domain/worldHistory.js` - World-space element history for infinite canvas
 
 ### Drawing Features
 
@@ -68,6 +72,7 @@ Paint Ease is a vanilla JavaScript paint application built with Vite. It feature
 - **Circle** - Center-radius drawing
 - **Triangle** - Isosceles triangle
 - **Eraser** - Uses `globalCompositeOperation: 'destination-out'`
+- **Laser Pointer** - Interactive laser pointer with trail effect (new)
 - **Trash** - Clear entire canvas
 - **Color Palette** - Toggle color popover with special button state management
 
@@ -77,7 +82,7 @@ Paint Ease is a vanilla JavaScript paint application built with Vite. It feature
 - **Temporary panning:** `Space` key hold (without changing tool)
 
 **Keyboard Shortcuts:**
-- `Ctrl/Cmd + 1-6` - Switch tools
+- `Ctrl/Cmd + 1-7` - Switch tools (1-6 original tools, 7 for laser pointer)
 - `Ctrl/Cmd + 0` - Clear canvas  
 - `Ctrl/Cmd + Z/Y` - Undo/Redo
 - `Space` - Temporary pan mode

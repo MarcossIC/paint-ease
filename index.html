@@ -89,47 +89,33 @@
                   <div class="tooltip">Laser Pointer (Ctrl+3)</div>
                   <input type="radio" name="tool" value="laser pointer tool" aria-labelledby="btn-laser"
                     aria-label="Laser pointer tool, show laser lines" aria-keyshortcuts="3" />
-                  <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor">
-                    <path d="M360-80q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35Zm179-139q-6-55-41-97t-87-57l106-107H236q-32 0-54-22t-22-54q0-20 10.5-37.5T198-622l486-291q18-11 38-5.5t31 23.5q11 18 5.5 37.5T736-827L360-600h364q32 0 54 22t22 54q0 18-4.5 35.5T778-458L539-219Z"/>
+                  <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px"
+                    fill="currentColor">
+                    <path
+                      d="M360-80q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35Zm179-139q-6-55-41-97t-87-57l106-107H236q-32 0-54-22t-22-54q0-20 10.5-37.5T198-622l486-291q18-11 38-5.5t31 23.5q11 18 5.5 37.5T736-827L360-600h364q32 0 54 22t22 54q0 18-4.5 35.5T778-458L539-219Z" />
                   </svg>
                 </label>
                 <div class="toolbar-driver"></div>
-                <label id="btn-rectangle" class="control-button btn tooltip-container" tabindex="4">
-                  <div class="tooltip">Rectangle (Ctrl+4)</div>
-                  <input type="radio" name="tool" value="draw rectangle tool" aria-labelledby="btn-rectangle"
-                    aria-label="Brush rectangle tool, start drawing rectangles" aria-keyshortcuts="4" />
+                <!-- Shapes tool button -->
+                <label id="btn-shapes" class="control-button btn tooltip-container no-counter" tabindex="10"
+                  aria-label="Shapes">
+                  <div class="tooltip">Shapes (Ctrl+4)</div>
+                  <input type="radio" name="clean-tool" value="Shapes tool" aria-labelledby="btn-shapes"
+                    aria-label="Shapes tool" aria-keyshortcuts="4" />
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M3 3m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" />
-                  </svg>
-                </label>
-                <label id="btn-triangle" class="control-button btn tooltip-container" tabindex="5">
-                  <div class="tooltip">Triangle (Ctrl+5)</div>
-                  <input type="radio" name="tool" value="draw triangle tool" aria-labelledby="btn-triangle"
-                    aria-label="Brush triangle tool, start drawing triangles" aria-keyshortcuts="5" />
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path
-                      d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
-                  </svg>
-                </label>
-                <label id="btn-circle" class="control-button btn tooltip-container" tabindex="6">
-                  <div class="tooltip">Circle (Ctrl+6)</div>
-                  <input type="radio" name="tool" value="draw circle tool" aria-labelledby="btn-circle"
-                    aria-label="Brush circle tool, start drawing circles" aria-keyshortcuts="6" />
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                    <path d="M12 3l8 4.5v9l-8 4.5l-8 -4.5v-9l8 -4.5z" />
+                    <path d="M12 12l8 -4.5" />
+                    <path d="M12 12v9" />
+                    <path d="M12 12l-8 -4.5" />
                   </svg>
                 </label>
                 <div class="toolbar-driver"></div>
                 <label id="btn-eraser" class="control-button btn tooltip-container" tabindex="7">
-                  <div class="tooltip">Eraser (Ctrl+7)</div>
+                  <div class="tooltip">Eraser (Ctrl+5)</div>
                   <input type="radio" name="tool" value="eraser tool" aria-labelledby="btn-eraser"
-                    aria-label="Eraser tool" aria-keyshortcuts="7" />
+                    aria-label="Eraser tool" aria-keyshortcuts="5" />
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -179,11 +165,122 @@
                     </div>
                   </div>
                 </label>
+
               </div>
             </div>
           </section>
         </div>
+
+        <!-- Shapes popover container -->
+        <div id="shapes-popover" class="shapes-popover hidden" role="dialog" aria-modal="false" aria-labelledby="btn-shapes">
+          <div class="shapes-section">
+            <h4 class="shapes-section-title">Formas</h4>
+            <div id="shapes-grid" class="shapes-grid" aria-label="Selector de formas">
+              <button type="button" class="shape-option active" data-shape="rectangle" aria-label="Rectángulo">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 3m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" />
+                </svg>
+              </button>
+              <button type="button" class="shape-option" data-shape="circle" aria-label="Círculo">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                </svg>
+              </button>
+              <button type="button" class="shape-option" data-shape="triangle-isosceles" aria-label="Triángulo Isósceles">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 3 L6 20 L18 20 Z" />
+                </svg>
+              </button>
+              <button type="button" class="shape-option" data-shape="triangle-scalene" aria-label="Triángulo Escaleno">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 4L20 18H2L8 4Z"
+                    fill="none"
+                    fillOpacity="0.1"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path d="M8 4L17 16H3L8 4Z" fill="none" stroke="currentColor" strokeWidth="1" strokeOpacity="0.6" />
+                </svg>
+              </button>
+              <button type="button" class="shape-option" data-shape="triangle-equilateral" aria-label="Triángulo Equilátero">
+                <svg
+                  width="30"
+                  height="30"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 5L19.5 17H4.5L12 5Z"
+                    fill="none"
+                    fillOpacity="0.1"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path d="M12 5L18.5 16H5.5L12 5Z" fill="none" stroke="currentColor" strokeWidth="1" strokeOpacity="0.6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="shapes-section">
+            <h4 class="shapes-section-title">Grosor del borde</h4>
+            <div class="shapes-range-container">
+              <input type="range" id="stroke-width-range" min="1" max="20" value="2" class="shapes-range">
+              <span id="stroke-width-value" class="shapes-range-value">2px</span>
+            </div>
+          </div>
+
+          <div class="shapes-section">
+            <h4 class="shapes-section-title">Relleno</h4>
+            <div id="fill-grid" class="color-grid" aria-label="Paleta de relleno"></div>
+          </div>
+
+          <div class="shapes-section">
+            <h4 class="shapes-section-title">Redondeo (solo rectángulo)</h4>
+            <div class="shapes-range-container">
+              <input type="range" id="corner-radius-range" min="0" max="50" value="0" class="shapes-range">
+              <span id="corner-radius-value" class="shapes-range-value">0px</span>
+            </div>
+          </div>
+
+          <div class="shapes-section">
+            <h4 class="shapes-section-title">Estilo de línea</h4>
+            <div class="line-style-grid">
+              <button type="button" class="line-style-option active" data-style="solid" aria-label="Línea sólida">
+                <div class="line-preview solid"></div>
+              </button>
+              <button type="button" class="line-style-option" data-style="dashed" aria-label="Línea punteada">
+                <div class="line-preview dashed"></div>
+              </button>
+              <button type="button" class="line-style-option" data-style="dotted" aria-label="Línea con puntos">
+                <div class="line-preview dotted"></div>
+              </button>
+            </div>
+          </div>
+          
+          <div class="shapes-section">
+            <h4 class="shapes-section-title">Opacidad</h4>
+            <div class="shapes-range-container">
+              <input type="range" id="shape-opacity-range" min="0" max="100" value="100" class="shapes-range">
+              <span id="shape-opacity-value" class="shapes-range-value">100%</span>
+            </div>
+          </div>
+        </div>
       </div>
+
+
 
 
       <footer id="tool-footer"
@@ -202,10 +299,10 @@
             </div>
             <div class="absolute bottom-0 right-[2%]">
               <div id="zoom-controls" class="w-auto flex bg-gray-200 rounded-xl custom-cursor-default" tabindex="12">
-                <button id="zoom-in" class="control-button btn" label="Zoom In" aria-label="Zoom in" 
-                tabindex="13"></button>
-              <button id="zoom-out" class="control-button btn" label="Zoom Out" aria-label="Zoom out" 
-                tabindex="14"></button>
+                <button id="zoom-in" class="control-button btn" label="Zoom In" aria-label="Zoom in"
+                  tabindex="13"></button>
+                <button id="zoom-out" class="control-button btn" label="Zoom Out" aria-label="Zoom out"
+                  tabindex="14"></button>
               </div>
             </div>
           </section>
@@ -248,10 +345,23 @@
       aria-labelledby="color-modal-title">
       <div class="color-modal-header">
         <h3 id="color-modal-title" class="color-modal-title">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg> Paleta de Colores
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600">
+            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+            <path
+              d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z">
+            </path>
+          </svg> Paleta de Colores
         </h3>
         <button id="color-modal-close" class="btn-icon" aria-label="Cerrar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
         </button>
       </div>
       <div class="color-modal-body">
@@ -260,7 +370,12 @@
 
         <div class="modal-row">
           <h4 class="section-title">Colores personalizados</h4>
-          <button id="color-modal-reset" class="btn-link" type="button" aria-label="Restablecer"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset</button>
+          <button id="color-modal-reset" class="btn-link" type="button" aria-label="Restablecer"><svg
+              xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg> Reset</button>
         </div>
         <div id="modal-active-grid" class="modal-color-grid mb-3" aria-label="Colores actuales"></div>
 

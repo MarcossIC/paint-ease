@@ -1,9 +1,6 @@
 import {
   TOOL_BRUSH_ID,
-  TOOL_CIRCLE_ID,
   TOOL_ERASER_ID,
-  TOOL_RECTANGLE_ID,
-  TOOL_TRIANGLE_ID,
 } from '../utils/constants';
 import rough from 'roughjs/bundled/rough.esm.js';
 
@@ -585,10 +582,11 @@ export const drawBasicRectangle = (ctx, { startX, startY, endX, endY, isPaddingO
   const width = endX - startX;
   const height = endY - startY;
 
+  // Always draw stroke (border), then fill if requested
+  ctx.strokeRect(startX, startY, width, height);
+  
   if (isPaddingOn) {
     ctx.fillRect(startX, startY, width, height);
-  } else {
-    ctx.strokeRect(startX, startY, width, height);
   }
 };
 
@@ -608,10 +606,11 @@ export const drawRoundedRectangleInfinite = (ctx, { startX, startY, endX, endY, 
     drawCustomRoundRectInfinite(ctx, startX, startY, width, height, adaptiveRadius);
   }
   
+  // Always draw stroke (border), then fill if requested
+  ctx.stroke();
+  
   if (isPaddingOn) {
     ctx.fill();
-  } else {
-    ctx.stroke();
   }
   
   ctx.restore();
@@ -637,9 +636,6 @@ export const drawCustomRoundRectInfinite = (ctx, x, y, width, height, radius) =>
 // ============ Legacy drawing methods (original format) ============
 export const drawMethods = {
   [TOOL_BRUSH_ID]: drawLine,
-  [TOOL_RECTANGLE_ID]: drawRoundedRect,
-  [TOOL_TRIANGLE_ID]: drawTriangle,
-  [TOOL_CIRCLE_ID]: drawCircle,
   [TOOL_ERASER_ID]: drawLine,
 };
 

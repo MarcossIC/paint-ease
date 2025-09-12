@@ -1,6 +1,6 @@
 import { store } from './appState';
 import WorldHistory from '../domain/worldHistory';
-import { TOOL_RECTANGLE_ID, TOOL_CIRCLE_ID, TOOL_TRIANGLE_ID } from '../utils/constants';
+// Shape tool constants - these are now internal to the shapes system
 import { strokeDrawingMethods, rectangleDrawingMethods } from './draw';
 import { getRecommendedColorSpace } from '../utils/supports';
 
@@ -444,46 +444,136 @@ export class InfiniteCanvas {
 
   // Draw a single shape - uses selected drawing method from draw.js
   drawShape(shape) {
-    this.ctx.beginPath();
-    this.ctx.strokeStyle = shape.settings.color || '#000000';
-    // If padding is requested, use provided color; otherwise ensure fill doesn't block strokes
-    this.ctx.fillStyle = (shape.settings.isPaddingOn ? (shape.settings.paddingColor || shape.settings.color || '#000000') : 'transparent');
-    this.ctx.lineWidth = shape.settings.size || 2;
-    this.ctx.lineCap = 'round';
-    this.ctx.lineJoin = 'round';
-
+    const ctx = this.ctx;
+    ctx.save();
+    
+    // Shape properties
     const { startX, startY, endX, endY, tool, settings } = shape;
+    const strokeWidth = settings.size || 2;
+    const strokeColor = settings.color || '#000000';
+    const fillColor = settings.paddingColor || strokeColor;
     const isPaddingOn = settings.isPaddingOn || false;
+    const cornerRadius = Number(settings.cornerRadius) || 0;
+    const lineStyle = settings.lineStyle || 'solid';
+    const opacity = settings.opacity ?? 100; // Default to 100% if not specified
+
+    // Apply opacity for shapes (0-100 percentage to 0-1 range)
+    ctx.globalAlpha = opacity / 100;
+
+    // Set stroke properties
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = strokeWidth;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    // Set fill properties
+    if (isPaddingOn) {
+      ctx.fillStyle = fillColor;
+    }
+
+    // Set line dash pattern based on line style
+    if (lineStyle === 'dashed') {
+      ctx.setLineDash([strokeWidth * 3, strokeWidth * 2]);
+    } else if (lineStyle === 'dotted') {
+      ctx.setLineDash([strokeWidth, strokeWidth]);
+    } else {
+      ctx.setLineDash([]);
+    }
+
+    ctx.beginPath();
 
     switch (tool) {
-      case TOOL_RECTANGLE_ID:
-        // Use selected rectangle drawing method from draw.js
-        const rectangleDrawFunction = rectangleDrawingMethods[this.shapeDrawingMethod] || rectangleDrawingMethods.basic;
-        rectangleDrawFunction(this.ctx, { startX, startY, endX, endY, isPaddingOn });
+      case 'btn-rectangle': {
+        // Use selected rectangle drawing method from draw.js; prefer rounded if radius > 0
+        const useRounded = cornerRadius > 0;
+        const method = useRounded ? 'rounded' : this.shapeDrawingMethod;
+        const rectangleDrawFunction = rectangleDrawingMethods[method] || rectangleDrawingMethods.basic;
+        rectangleDrawFunction(ctx, { startX, startY, endX, endY, isPaddingOn, radius: cornerRadius });
         break;
+      }
 
-      case TOOL_CIRCLE_ID:
+      case 'btn-circle': {
         const radius = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
-        this.ctx.arc(startX, startY, radius, 0, Math.PI * 2);
+        ctx.arc(startX, startY, radius, 0, Math.PI * 2);
+        
+        // Always draw stroke (border), then fill if requested
+        ctx.stroke();
+        
         if (isPaddingOn) {
-          this.ctx.fill();
-        } else {
-          this.ctx.stroke();
+          ctx.fill();
         }
         break;
+      }
 
-      case TOOL_TRIANGLE_ID:
-        this.ctx.moveTo(startX, startY);
-        this.ctx.lineTo(endX, endY);
-        this.ctx.lineTo(startX * 2 - endX, endY);
-        this.ctx.closePath();
+      case 'btn-triangle-isosceles': {
+        // Create isosceles triangle (two equal sides)
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.lineTo(startX * 2 - endX, endY);
+        ctx.closePath();
+        
+        // Always draw stroke (border), then fill if requested
+        ctx.stroke();
+        
         if (isPaddingOn) {
-          this.ctx.fill();
-        } else {
-          this.ctx.stroke();
+          ctx.fill();
         }
         break;
+      }
+
+      case 'btn-triangle-scalene': {
+        // Create scalene triangle (all different sides)
+        const deltaX = endX - startX;
+        const deltaY = endY - startY;
+        // Third point offset to create unequal sides
+        const thirdX = startX - deltaX * 0.3;
+        const thirdY = endY + deltaY * 0.2;
+        
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.lineTo(thirdX, thirdY);
+        ctx.closePath();
+        
+        // Always draw stroke (border), then fill if requested
+        ctx.stroke();
+        
+        if (isPaddingOn) {
+          ctx.fill();
+        }
+        break;
+      }
+
+      case 'btn-triangle-equilateral': {
+        // Create equilateral triangle (all equal sides)
+        const deltaX = endX - startX;
+        const deltaY = endY - startY;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        
+        // Calculate equilateral triangle points
+        const height = distance * Math.sin(Math.PI / 3); // 60 degrees
+        const centerX = (startX + endX) / 2;
+        const centerY = (startY + endY) / 2;
+        
+        // Third point to form equilateral triangle
+        const thirdX = centerX - height * (deltaY / distance);
+        const thirdY = centerY + height * (deltaX / distance);
+        
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.lineTo(thirdX, thirdY);
+        ctx.closePath();
+        
+        // Always draw stroke (border), then fill if requested
+        ctx.stroke();
+        
+        if (isPaddingOn) {
+          ctx.fill();
+        }
+        break;
+      }
     }
+
+    ctx.restore();
   }
 
   // Redraw only the current stroke (for performance during drawing)
